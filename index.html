@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LifeMap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  --paper:#F7F7FB;
+  --paper-raised:#FFFFFF;
+  --ink:#14131F;
+  --ink-soft:#5B5A6E;
+  --ink-faint:#9694A8;
+  --line:#E4E2EE;
+  --indigo:#5B5FEF;
+  --indigo-soft:#EEEEFD;
+  --coral:#FF5C7A;
+  --coral-soft:#FFEBEF;
+  --mint:#0FA57E;
+  --mint-soft:#E4F8F0;
+  --amber:#E5A400;
+  --amber-soft:#FFF6DF;
+  --radius-s:10px;
+  --radius-m:16px;
+  --radius-l:24px;
+  --shadow:0 1px 2px rgba(20,19,31,.04), 0 8px 24px -12px rgba(20,19,31,.12);
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111018;
+    --paper-raised:#191823;
+    --ink:#F3F2FA;
+    --ink-soft:#B5B3C8;
+    --ink-faint:#726F87;
+    --line:#2B2A3A;
+    --indigo-soft:#232149;
+    --coral-soft:#3A1F29;
+    --mint-soft:#123329;
+    --amber-soft:#332707;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111018;
+  --paper-raised:#191823;
+  --ink:#F3F2FA;
+  --ink-soft:#B5B3C8;
+  --ink-faint:#726F87;
+  --line:#2B2A3A;
+  --indigo-soft:#232149;
+  --coral-soft:#3A1F29;
+  --mint-soft:#123329;
+  --amber-soft:#332707;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif;}
+button{font-family:inherit;}
+::selection{background:var(--indigo);color:#fff;}
+
+.app{display:flex;min-height:100vh;}
+
+/* ---------- Sidebar ---------- */
+.rail{
+  width:240px;flex:0 0 240px;
+  background:var(--paper-raised);
+  border-right:1px solid var(--line);
+  padding:28px 18px;
+  display:flex;flex-direction:column;gap:28px;
+  position:sticky;top:0;height:100vh;
+}
+.rail-brand{display:flex;align-items:baseline;gap:8px;padding:0 8px;}
+.rail-brand .mark{
+  width:30px;height:30px;border-radius:9px;
+  background:linear-gradient(135deg,var(--indigo),var(--coral));
+  flex:0 0 30px;
+  position:relative;
+}
+.rail-brand .mark::after{
+  content:"";position:absolute;inset:8px;border-radius:4px;background:var(--paper-raised);
+}
+.rail-brand .word{font-size:19px;font-weight:700;letter-spacing:-.02em;}
+.rail nav{display:flex;flex-direction:column;gap:2px;}
+.rail-link{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 12px;border-radius:var(--radius-s);
+  color:var(--ink-soft);text-decoration:none;font-size:14.5px;font-weight:600;
+  border:none;background:none;cursor:pointer;text-align:left;width:100%;
+}
+.rail-link .ic{width:18px;height:18px;flex:0 0 18px;}
+.rail-link:hover{background:var(--paper);color:var(--ink);}
+.rail-link.active{background:var(--indigo-soft);color:var(--indigo);}
+.rail-profile{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--radius-m);background:var(--paper);border:1px solid var(--line);cursor:pointer;text-align:left;font-family:inherit;}
+.rail-profile:hover{border-color:var(--ink-faint);}
+.rail-profile .rp-name{font-size:13px;font-weight:700;color:var(--ink);}
+.rail-profile .rp-sub{font-size:11.5px;color:var(--ink-faint);}
+
+.avatar-circle{
+  width:38px;height:38px;border-radius:50%;flex:0 0 38px;
+  background:linear-gradient(135deg,var(--indigo),var(--coral));
+  display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;
+}
+.avatar-circle.sm{width:30px;height:30px;flex:0 0 30px;font-size:15px;}
+.avatar-circle.lg{width:64px;height:64px;flex:0 0 64px;font-size:30px;}
+
+.mobile-fab{
+  display:none;position:fixed;top:calc(14px + env(safe-area-inset-top,0px));right:14px;
+  width:38px;height:38px;border-radius:50%;border:none;padding:0;cursor:pointer;
+  background:linear-gradient(135deg,var(--indigo),var(--coral));color:#fff;font-size:17px;
+  align-items:center;justify-content:center;z-index:45;box-shadow:var(--shadow);
+}
+@media(max-width:820px){.mobile-fab{display:flex;}}
+
+.chat-fab{
+  display:none;position:fixed;bottom:calc(22px + env(safe-area-inset-bottom,0px));right:22px;
+  width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;
+  background:var(--ink);color:var(--paper);font-size:22px;
+  align-items:center;justify-content:center;z-index:46;box-shadow:var(--shadow);
+}
+@media(max-width:820px){.chat-fab{bottom:calc(80px + env(safe-area-inset-bottom,0px));right:16px;}}
+.chat-panel{
+  display:none;flex-direction:column;position:fixed;bottom:calc(84px + env(safe-area-inset-bottom,0px));right:22px;
+  width:350px;max-width:calc(100vw - 32px);height:min(520px,70vh);
+  background:var(--paper-raised);border:1px solid var(--line);border-radius:var(--radius-l);
+  box-shadow:var(--shadow);z-index:47;overflow:hidden;
+}
+@media(max-width:820px){.chat-panel{bottom:calc(142px + env(safe-area-inset-bottom,0px));right:16px;}}
+.chat-head{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;background:var(--paper);}
+.chat-head b{font-size:14px;}
+.chat-head span{font-size:11px;color:var(--ink-faint);}
+.chat-body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
+.chat-bubble{max-width:85%;padding:9px 12px;border-radius:14px;font-size:13px;line-height:1.45;white-space:pre-wrap;}
+.chat-bubble.user{align-self:flex-end;background:var(--indigo);color:#fff;border-bottom-right-radius:4px;}
+.chat-bubble.assistant{align-self:flex-start;background:var(--paper);border:1px solid var(--line);border-bottom-left-radius:4px;}
+.chat-empty{font-size:12.5px;color:var(--ink-faint);line-height:1.6;padding:6px 2px;}
+.chat-input-row{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);}
+.chat-input-row input{flex:1;}
+.chat-input-row button{background:var(--indigo);color:#fff;border:none;border-radius:var(--radius-s);width:38px;flex:0 0 38px;cursor:pointer;font-size:15px;}
+.chat-input-row button:disabled{opacity:.4;}
+
+.avatar-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:4px;}
+.avatar-opt{
+  aspect-ratio:1;border-radius:12px;border:2px solid var(--line);background:var(--paper);
+  font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+}
+.avatar-opt.sel{border-color:var(--indigo);background:var(--indigo-soft);}
+
+.onboard-wrap{
+  display:none;min-height:100vh;align-items:center;justify-content:center;padding:24px;
+  padding-top:calc(24px + env(safe-area-inset-top,0px));padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));
+}
+.onboard-card{
+  width:100%;max-width:420px;background:var(--paper-raised);border:1px solid var(--line);
+  border-radius:var(--radius-l);padding:30px;box-shadow:var(--shadow);
+}
+.onboard-brand{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
+.onboard-brand .mark{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--indigo),var(--coral));position:relative;}
+.onboard-brand .mark::after{content:"";position:absolute;inset:8px;border-radius:4px;background:var(--paper-raised);}
+.onboard-brand .word{font-family:'Space Grotesk';font-weight:700;font-size:18px;}
+.danger-zone{border:1px solid var(--coral-soft);background:var(--coral-soft);border-radius:var(--radius-m);padding:14px;margin-top:18px;}
+.danger-zone p{margin:0 0 10px;font-size:12.5px;color:var(--ink-soft);}
+.btn.danger{background:var(--coral);color:#fff;}
+.btn.danger:hover{opacity:.88;}
+
+/* ---------- Bottom tabs (mobile) ---------- */
+.tabs{display:none;}
+
+/* ---------- Main ---------- */
+main{flex:1;min-width:0;padding:32px 40px 80px;max-width:1180px;}
+.topbar{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:28px;gap:12px;flex-wrap:wrap;}
+.topbar h1{font-size:26px;margin:0 0 4px;letter-spacing:-.01em;}
+.topbar p{margin:0;color:var(--ink-soft);font-size:14px;}
+.topbar-right{display:flex;gap:8px;align-items:center;}
+
+.grid{display:grid;gap:16px;}
+.g2{grid-template-columns:1.3fr 1fr;}
+.g3{grid-template-columns:repeat(3,1fr);}
+@media(max-width:900px){.g2,.g3{grid-template-columns:1fr;}}
+
+.card{
+  background:var(--paper-raised);
+  border:1px solid var(--line);
+  border-radius:var(--radius-l);
+  padding:22px;
+  box-shadow:var(--shadow);
+}
+.card.tight{padding:18px;}
+.card h3{font-size:13.5px;text-transform:none;letter-spacing:0;margin:0 0 14px;color:var(--ink);font-weight:600;display:flex;align-items:center;justify-content:space-between;}
+.card h3 .muted{font-weight:500;color:var(--ink-faint);font-size:12.5px;}
+
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;}
+.pill.indigo{background:var(--indigo-soft);color:var(--indigo);}
+.pill.coral{background:var(--coral-soft);color:var(--coral);}
+.pill.mint{background:var(--mint-soft);color:var(--mint);}
+.pill.amber{background:var(--amber-soft);color:var(--amber);}
+
+.btn{
+  border:none;border-radius:var(--radius-s);padding:10px 16px;font-weight:600;font-size:14px;
+  cursor:pointer;display:inline-flex;align-items:center;gap:8px;
+}
+.btn.primary{background:var(--ink);color:var(--paper);}
+.btn.primary:hover{opacity:.88;}
+.btn.ghost{background:var(--paper);color:var(--ink);border:1px solid var(--line);}
+.btn.ghost:hover{border-color:var(--ink-faint);}
+.btn.sm{padding:6px 11px;font-size:12.5px;border-radius:8px;}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+.icon-btn{border:none;background:none;cursor:pointer;color:var(--ink-faint);padding:4px;border-radius:6px;display:flex;}
+.icon-btn:hover{color:var(--coral);background:var(--coral-soft);}
+
+input,textarea,select{
+  font-family:inherit;font-size:14px;color:var(--ink);
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-s);
+  padding:10px 12px;width:100%;
+}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--indigo);outline-offset:1px;border-color:transparent;}
+label{font-size:12.5px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:6px;}
+.field{margin-bottom:14px;}
+.row{display:flex;gap:10px;}
+.row>*{flex:1;}
+
+/* progress bar */
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;}
+.bar > span{display:block;height:100%;border-radius:99px;}
+
+/* list rows */
+.rowline{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);}
+.rowline:last-child{border-bottom:none;}
+.dot{width:9px;height:9px;border-radius:50%;flex:0 0 9px;}
+.rowline .main{flex:1;min-width:0;}
+.rowline .title{font-size:14px;font-weight:600;}
+.rowline .sub{font-size:12.5px;color:var(--ink-faint);margin-top:1px;}
+.rowline .time{font-size:12.5px;color:var(--ink-soft);font-weight:600;white-space:nowrap;}
+
+.empty{padding:28px 10px;text-align:center;color:var(--ink-faint);font-size:13.5px;}
+.empty .big{font-size:28px;display:block;margin-bottom:6px;}
+
+/* Scheduler hero input */
+.smart-bar{
+  background:linear-gradient(135deg,#14131F 0%, #2b2a44 100%);
+  border-radius:var(--radius-l);
+  padding:26px 26px 22px;
+  color:#fff;margin-bottom:22px;
+  position:relative;overflow:hidden;
+}
+.smart-bar::before{
+  content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,92,122,.35),transparent 70%);
+}
+.smart-bar h2{margin:0 0 4px;font-size:19px;position:relative;}
+.smart-bar p{margin:0 0 16px;font-size:13.5px;color:rgba(255,255,255,.68);position:relative;max-width:520px;}
+.smart-form{display:flex;gap:8px;position:relative;flex-wrap:wrap;}
+.smart-form input{
+  flex:1;min-width:220px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:#fff;padding:13px 14px;font-size:14.5px;
+}
+.smart-form input::placeholder{color:rgba(255,255,255,.45);}
+.smart-form input:focus{outline:2px solid var(--coral);}
+.smart-form button{background:var(--coral);color:#fff;border:none;border-radius:var(--radius-s);padding:0 18px;font-weight:700;font-size:14px;cursor:pointer;}
+.smart-form button:hover{background:#ff3f60;}
+
+.why{background:var(--indigo-soft);border-radius:var(--radius-m);padding:12px 14px;font-size:12.5px;color:var(--ink-soft);margin-top:12px;line-height:1.55;display:none;}
+.why.show{display:block;}
+.why b{color:var(--indigo);}
+
+/* day timeline (google-calendar style) */
+.day-tabs{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:2px;}
+.day-tab{flex:0 0 auto;padding:8px 14px;border-radius:99px;border:1px solid var(--line);background:var(--paper);font-size:12.5px;font-weight:600;cursor:pointer;color:var(--ink-soft);}
+.day-tab.active{background:var(--indigo);color:#fff;border-color:var(--indigo);}
+.timeline-wrap{position:relative;border-top:1px solid var(--line);margin-top:4px;overflow-x:auto;}
+.timeline{position:relative;}
+.tl-hour{position:absolute;left:0;right:0;border-top:1px solid var(--line);height:0;}
+.tl-hour span{position:absolute;left:0;top:-8px;font-size:10.5px;color:var(--ink-faint);background:var(--paper-raised);padding-right:8px;width:48px;}
+.tl-event{position:absolute;left:56px;right:6px;border-radius:8px;padding:5px 9px;overflow:hidden;font-size:12px;}
+.tl-title{font-weight:700;line-height:1.25;}
+.tl-time{font-size:10.5px;opacity:.75;margin-top:2px;}
+.tl-untimed{margin-top:14px;border-top:1px solid var(--line);padding-top:10px;}
+.tl-untimed-label{font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;margin-bottom:6px;}
+
+/* week view */
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:4px;}
+.day{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-m);padding:10px;min-height:150px;}
+.day.today{border-color:var(--indigo);}
+.day .dname{font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.03em;margin-bottom:8px;}
+.day .dname b{color:var(--ink);}
+.ev{border-radius:8px;padding:6px 8px;margin-bottom:6px;font-size:11.5px;font-weight:600;line-height:1.3;cursor:default;}
+@media(max-width:900px){.week{grid-template-columns:1fr;}.day{min-height:auto;}}
+
+/* mastery */
+.topic{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--line);}
+.topic:last-child{border-bottom:none;}
+.mst{width:11px;height:11px;border-radius:50%;flex:0 0 11px;}
+.mst.strong{background:var(--mint);}
+.mst.review{background:var(--amber);}
+.mst.weak{background:var(--coral);}
+.topic .main{flex:1;min-width:0;}
+.topic .title{font-weight:600;font-size:14px;}
+.topic .sub{font-size:12px;color:var(--ink-faint);margin-top:2px;}
+.plan-steps{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.step-chip{font-size:10.5px;font-weight:700;background:var(--paper);border:1px solid var(--line);border-radius:99px;padding:3px 9px;color:var(--ink-soft);}
+
+/* flashcard */
+.flash{
+  background:var(--indigo);color:#fff;border-radius:var(--radius-l);
+  min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;
+  padding:24px;cursor:pointer;font-weight:600;font-size:16px;position:relative;
+}
+.flash .tag{position:absolute;top:14px;left:16px;font-size:11px;font-weight:700;opacity:.7;text-transform:uppercase;letter-spacing:.04em;}
+.flash-nav{display:flex;justify-content:space-between;align-items:center;margin-top:14px;}
+
+/* money */
+.stat-row{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:6px;}
+.stat-num{font-family:'Space Grotesk';font-size:30px;font-weight:700;letter-spacing:-.02em;}
+.cat-bar{display:flex;height:14px;border-radius:99px;overflow:hidden;margin:14px 0 10px;background:var(--line);}
+.legend{display:flex;flex-wrap:wrap;gap:10px 16px;font-size:12.5px;color:var(--ink-soft);}
+.legend span{display:inline-flex;align-items:center;gap:6px;}
+.legend i{width:8px;height:8px;border-radius:2px;display:inline-block;}
+.txn{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+.txn:last-child{border-bottom:none;}
+.txn .cat{color:var(--ink-faint);font-size:12px;}
+.amt-neg{color:var(--coral);font-weight:700;}
+.amt-pos{color:var(--mint);font-weight:700;}
+
+/* goals/habits */
+.goal-card{border-left:4px solid var(--amber);}
+.habit-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:8px;}
+.hcell{aspect-ratio:1;border-radius:5px;background:var(--line);}
+.hcell.done{background:var(--mint);}
+.streak{font-size:12px;color:var(--ink-faint);margin-top:6px;}
+
+.section-gap{margin-top:24px;}
+.fab-add{display:flex;justify-content:flex-end;margin-bottom:14px;}
+
+.modal-bg{position:fixed;inset:0;background:rgba(20,19,31,.5);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
+.modal-bg.show{display:flex;}
+.modal{background:var(--paper-raised);border-radius:var(--radius-l);padding:24px;width:100%;max-width:420px;max-height:85vh;overflow:auto;}
+.modal h3{margin:0 0 16px;font-size:17px;}
+.modal-actions{display:flex;gap:8px;margin-top:6px;justify-content:flex-end;}
+
+@media(max-width:820px){
+  .rail{display:none;}
+  main{padding:20px 16px 90px;}
+  .tabs{
+    display:flex;position:fixed;bottom:0;left:0;right:0;
+    background:var(--paper-raised);border-top:1px solid var(--line);
+    padding:8px 6px calc(8px + env(safe-area-inset-bottom,0px));
+    z-index:40;justify-content:space-around;
+  }
+  .tab-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--ink-faint);font-size:10.5px;font-weight:600;padding:4px 6px;flex:1;cursor:pointer;}
+  .tab-btn.active{color:var(--indigo);}
+  .tab-btn .ic{width:20px;height:20px;}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important;}}
+.bar>span, .cat-bar>span{transition:width .5s ease;}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div class="rail-brand"><div class="mark"></div><span class="word">LifeMap</span></div>
+    <nav id="railNav"></nav>
+    <button class="rail-profile" id="railProfile" onclick="setView('profile')"></button>
+  </aside>
+
+  <main id="main"></main>
+</div>
+
+<nav class="tabs" id="tabNav"></nav>
+<button class="mobile-fab" id="mobileFab" onclick="setView('profile')"></button>
+
+<button class="chat-fab" id="chatFab" onclick="toggleChat()">💬</button>
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-head"><div><b>LifeMap Assistant</b><br><span>Ask it to add or plan things for you</span></div><button class="icon-btn" onclick="toggleChat()">✕</button></div>
+  <div class="chat-body" id="chatBody"></div>
+  <form class="chat-input-row" onsubmit="sendChat(event)">
+    <input id="chatInput" placeholder="e.g. add gym Tuesday 5pm" autocomplete="off">
+    <button type="submit">➤</button>
+  </form>
+</div>
+
+<div class="onboard-wrap" id="onboarding"></div>
+
+<div class="modal-bg" id="modalBg"><div class="modal" id="modalBody"></div></div>
+
+<script>
+/* ---------------- ICONS (tiny inline svg set) ---------------- */
+const ICONS = {
+  home:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>',
+  cal:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',
+  brain:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 5 1V4z"/><path d="M15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-5 1V4z"/></svg>',
+  wallet:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18"/><circle cx="16" cy="14.5" r="1"/></svg>',
+  target:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m-9 0v14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V6"/></svg>',
+  spark:'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2 2M16 16l2 2M6 18l2-2M16 8l2-2"/></svg>',
+};
+
+/* ---------------- STATE ---------------- */
+const STORE_KEY='lifemap-state-v1';
+const today = new Date(); today.setHours(0,0,0,0);
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const CLASS_DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+function classEventsForDate(d){
+  const key = CLASS_DAYS[(d.getDay()+6)%7];
+  return (state.classSchedule[key]||[]).map(c=>({id:'cls-'+c.id, title:c.title, type:'class', date: iso(d), time:c.time||'', note:'', isClass:true}));
+}
+function eventsForDate(d){
+  return [...classEventsForDate(d), ...state.events.filter(e=>e.date===iso(d))];
+}
+const CAT_COLORS = {Food:'var(--coral)', Transport:'var(--indigo)', Entertainment:'var(--amber)', Other:'var(--mint)'};
+
+function iso(d){ const x=new Date(d); x.setHours(0,0,0,0); return x.toISOString().slice(0,10); }
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+function fmtDate(d){ return new Date(d).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}); }
+function uid(){ return Math.random().toString(36).slice(2,9); }
+
+function seed(){
+  const t=today;
+  return {
+    classSchedule:{Mon:[],Tue:[],Wed:[],Thu:[],Fri:[],Sat:[],Sun:[]},
+    events:[
+      {id:uid(), title:'Biology', type:'class', date:iso(t), time:'08:30', note:''},
+      {id:uid(), title:'Economics essay work block', type:'study', date:iso(t), time:'16:00', note:''},
+      {id:uid(), title:'Swim practice', type:'activity', date:iso(addDays(t,1)), time:'17:00', note:''},
+      {id:uid(), title:'History homework due', type:'assignment', date:iso(addDays(t,2)), time:'23:59', note:''},
+    ],
+    subjects:[
+      {id:uid(), name:'Biology', topic:'Cell respiration', examDate:iso(addDays(t,6)), confidence:2},
+      {id:uid(), name:'Economics', topic:'Opportunity cost', examDate:iso(addDays(t,10)), confidence:4},
+    ],
+    flashcards:[
+      {id:uid(), subject:'Biology', front:'What is the main product of cell respiration?', back:'ATP (energy) — plus CO₂ and water as byproducts.'},
+      {id:uid(), subject:'Economics', front:'Define opportunity cost.', back:'The value of the next-best alternative you give up when you make a choice.'},
+    ],
+    money:{
+      monthlyIncome:120,
+      transactions:[
+        {id:uid(), label:'Bus pass', cat:'Transport', amt:-15, date:iso(addDays(t,-2))},
+        {id:uid(), label:'Lunch out', cat:'Food', amt:-8, date:iso(addDays(t,-1))},
+        {id:uid(), label:'Movie tickets', cat:'Entertainment', amt:-14, date:iso(addDays(t,-1))},
+        {id:uid(), label:'Allowance', cat:'Income', amt:60, date:iso(t)},
+      ],
+      goal:{name:'New headphones', target:80, saved:32}
+    },
+    goals:[
+      {id:uid(), title:'Save for headphones', progress:40, deadline:iso(addDays(t,25))},
+      {id:uid(), title:'Finish Econ IA', progress:20, deadline:iso(addDays(t,14))},
+    ],
+    habits:[
+      {id:uid(), title:'Read 20 min', days:[1,1,0,1,0,0,0]},
+      {id:uid(), title:'No phone before bed', days:[1,1,1,0,1,0,0]},
+    ]
+  };
+}
+
+let state;
+try{
+  const raw = localStorage.getItem(STORE_KEY);
+  state = raw ? JSON.parse(raw) : seed();
+}catch(e){ state = seed(); }
+if(!('profile' in state)) state.profile = null;
+if(!state.classSchedule) state.classSchedule = {Mon:[],Tue:[],Wed:[],Thu:[],Fri:[],Sat:[],Sun:[]};
+if(!('classesConfirmed' in state)) state.classesConfirmed = !!state.setupComplete;
+if(!('moneySetupDone' in state)) state.moneySetupDone = false;
+
+function save(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+/* ---------------- PROFILE / ONBOARDING ---------------- */
+const AVATARS = ['🦊','🐨','🐧','🦁','🐢','🌸','⚡','🎧','🏀','🎨','🌙','🔥'];
+const GRADES = ['8th grade','9th grade','10th grade','11th grade','12th grade','Not in school'];
+let obAvatar = AVATARS[0];
+let profAvatar = null;
+let obMode = 'signup';
+let obError = '';
+
+function greetingWord(){
+  const h = new Date().getHours();
+  return h<12?'Good morning':h<18?'Good afternoon':'Good evening';
+}
+
+/* --- Account code: a manual export/import blob, since there's no server --- */
+function encodeAccountCode(){
+  const payload = {
+    profile: state.profile, classSchedule: state.classSchedule, events: state.events,
+    subjects: state.subjects, flashcards: state.flashcards, money: state.money,
+    goals: state.goals, habits: state.habits, classesConfirmed: state.classesConfirmed, moneySetupDone: state.moneySetupDone
+  };
+  return btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+}
+function decodeAccountCode(code){
+  return JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
+}
+
+function renderOnboarding(){
+  if(!state.profile){
+    document.getElementById('onboarding').innerHTML = `
+      <div class="onboard-card">
+        <div class="onboard-brand"><div class="mark"></div><span class="word">LifeMap</span></div>
+        <div style="display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:20px">
+          <button type="button" class="btn ${obMode==='signup'?'primary':'ghost'} sm" style="flex:1;border-radius:0;justify-content:center" onclick="setObMode('signup')">Sign up</button>
+          <button type="button" class="btn ${obMode==='login'?'primary':'ghost'} sm" style="flex:1;border-radius:0;justify-content:center" onclick="setObMode('login')">Log in</button>
+        </div>
+        ${obMode==='signup' ? `
+          <h2 style="margin:0 0 4px;font-size:20px">Create your LifeMap account</h2>
+          <p style="margin:0 0 18px;font-size:13.5px;color:var(--ink-soft)">A couple quick things so your dashboard actually looks like yours. This all stays on your device — see Account in Profile for what that means.</p>
+          <div class="field"><label>What should we call you?</label><input id="obName" placeholder="Your name"></div>
+          <div class="field"><label>Pick an avatar</label>
+            <div class="avatar-grid">${AVATARS.map(a=>`<button type="button" class="avatar-opt ${a===obAvatar?'sel':''}" onclick="selectObAvatar('${a}')">${a}</button>`).join('')}</div>
+          </div>
+          <div class="field"><label>Grade / year</label>
+            <select id="obGrade">${GRADES.map(g=>`<option>${g}</option>`).join('')}</select>
+          </div>
+          <div class="row">
+            <div class="field"><label>Email</label><input id="obEmail" type="email" placeholder="you@email.com"></div>
+            <div class="field"><label>Phone <span style="font-weight:500;color:var(--ink-faint)">(optional)</span></label><input id="obPhone" type="tel" placeholder="+91 …"></div>
+          </div>
+          ${obError ? `<div style="color:var(--coral);font-size:12.5px;margin:-6px 0 12px">${esc(obError)}</div>` : ''}
+          <button class="btn primary" style="width:100%;justify-content:center;padding:12px" onclick="saveProfile()">Sign up</button>
+        ` : `
+          <h2 style="margin:0 0 4px;font-size:20px">Log in with your code</h2>
+          <p style="margin:0 0 14px;font-size:13.5px;color:var(--ink-soft)">If you set up LifeMap on another device, open Profile → Account there, copy your account code, and paste it below to bring everything here.</p>
+          <div class="field"><textarea id="obCode" rows="5" placeholder="Paste your LifeMap account code here" style="font-family:monospace;font-size:11.5px"></textarea></div>
+          ${obError ? `<div style="color:var(--coral);font-size:12.5px;margin:-6px 0 12px">${esc(obError)}</div>` : ''}
+          <button class="btn primary" style="width:100%;justify-content:center;padding:12px" onclick="loginWithCode()">Log in</button>
+        `}
+      </div>
+    `;
+    return;
+  }
+  if(!state.classesConfirmed){
+    document.getElementById('onboarding').innerHTML = `
+      <div class="onboard-card" style="max-width:480px">
+        <div class="onboard-brand"><div class="mark"></div><span class="word">LifeMap</span></div>
+        <h2 style="margin:0 0 4px;font-size:20px">What classes do you have?</h2>
+        <p style="margin:0 0 18px;font-size:13.5px;color:var(--ink-soft)">Add your weekly classes once and they'll show up on your schedule automatically, every week. You can edit these anytime from Scheduler.</p>
+        ${classFormHtml()}
+        <div style="display:flex;gap:8px;margin-top:18px">
+          <button class="btn ghost" onclick="finishClassesStep()">Skip for now</button>
+          <button class="btn primary" style="flex:1;justify-content:center" onclick="finishClassesStep()">Continue</button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+  document.getElementById('onboarding').innerHTML = `
+    <div class="onboard-card" style="max-width:440px">
+      <div class="onboard-brand"><div class="mark"></div><span class="word">LifeMap</span></div>
+      <h2 style="margin:0 0 4px;font-size:20px">Let's set up MoneyMap</h2>
+      <p style="margin:0 0 18px;font-size:13.5px;color:var(--ink-soft)">A few numbers so your money tab reflects your actual situation instead of sample data.</p>
+      <div class="field"><label>How much do you get / have to work with each month?</label><input id="msIncome" type="number" min="0" step="1" placeholder="e.g. 2000"></div>
+      <div class="field"><label>What are you saving for?</label><input id="msGoalName" placeholder="e.g. New headphones"></div>
+      <div class="row">
+        <div class="field"><label>Goal amount (₹)</label><input id="msGoalTarget" type="number" min="1" step="1" placeholder="e.g. 3000"></div>
+        <div class="field"><label>Already saved (₹)</label><input id="msGoalSaved" type="number" min="0" step="1" placeholder="0"></div>
+      </div>
+      ${obError ? `<div style="color:var(--coral);font-size:12.5px;margin:-6px 0 12px">${esc(obError)}</div>` : ''}
+      <div style="display:flex;gap:8px;margin-top:18px">
+        <button class="btn ghost" onclick="skipMoneySetup()">Skip for now</button>
+        <button class="btn primary" style="flex:1;justify-content:center" onclick="finishMoneySetup()">Finish</button>
+      </div>
+    </div>
+  `;
+}
+function classFormHtml(){
+  const groups = CLASS_DAYS.map(d=>{
+    const list = state.classSchedule[d]||[];
+    if(!list.length) return '';
+    return `<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;margin-bottom:4px">${d}</div>
+      ${list.map(c=>`<div class="rowline" style="padding:6px 0"><div class="main"><div class="title" style="font-size:13px">${esc(c.title)}</div></div><div class="time">${c.time||''}</div><button class="icon-btn" onclick="removeClassEntry('${d}','${c.id}')">${ICONS.trash}</button></div>`).join('')}
+    </div>`;
+  }).join('');
+  return `
+    <div class="row" style="margin-bottom:10px">
+      <select id="ocDay">${CLASS_DAYS.map(d=>`<option>${d}</option>`).join('')}</select>
+      <input id="ocTitle" placeholder="Class name">
+      <input id="ocTime" type="time">
+    </div>
+    <button class="btn ghost sm" type="button" onclick="addClassEntry()">${ICONS.plus} Add class</button>
+    <div style="margin-top:14px;max-height:240px;overflow:auto">
+      ${groups || '<div class="empty" style="padding:14px 0">No classes added yet.</div>'}
+    </div>
+  `;
+}
+function addClassEntry(){
+  const day = document.getElementById('ocDay').value;
+  const title = document.getElementById('ocTitle').value.trim();
+  const time = document.getElementById('ocTime').value;
+  if(!title) return;
+  if(!state.classSchedule[day]) state.classSchedule[day]=[];
+  state.classSchedule[day].push({id:uid(), title, time});
+  save();
+  refreshClassEditor();
+}
+function removeClassEntry(day,id){
+  state.classSchedule[day] = (state.classSchedule[day]||[]).filter(c=>c.id!==id);
+  save();
+  refreshClassEditor();
+}
+function refreshClassEditor(){
+  if(!state.profile || !state.classesConfirmed || !state.moneySetupDone){ renderOnboarding(); return; }
+  if(document.getElementById('modalBg').classList.contains('show')){ document.getElementById('modalBody').innerHTML = classEditorModalHtml(); }
+}
+function openEditClasses(){
+  document.getElementById('modalBody').innerHTML = classEditorModalHtml();
+  document.getElementById('modalBg').classList.add('show');
+}
+function classEditorModalHtml(){
+  return `<h3>Weekly classes</h3>${classFormHtml()}<div class="modal-actions"><button class="btn primary" onclick="closeModal()">Done</button></div>`;
+}
+function finishClassesStep(){
+  state.classesConfirmed = true;
+  obError = '';
+  save();
+  render();
+}
+function skipMoneySetup(){
+  state.moneySetupDone = true;
+  save();
+  active = 'moneymap';
+  render();
+}
+function finishMoneySetup(){
+  const income = +document.getElementById('msIncome').value || 0;
+  const goalName = document.getElementById('msGoalName').value.trim();
+  const goalTarget = +document.getElementById('msGoalTarget').value || 0;
+  const goalSaved = +document.getElementById('msGoalSaved').value || 0;
+  const transactions = [];
+  if(income>0) transactions.push({id:uid(), label:'Monthly income', cat:'Income', amt:income, date:iso(today)});
+  state.money = {
+    monthlyIncome: income,
+    transactions,
+    goal: { name: goalName || 'Savings goal', target: Math.max(1, goalTarget||1), saved: goalSaved }
+  };
+  state.moneySetupDone = true;
+  obError = '';
+  save();
+  active = 'moneymap';
+  render();
+}
+function goToMoneySetup(){
+  state.moneySetupDone = false;
+  save();
+  render();
+}
+function selectObAvatar(a){ obAvatar=a; renderOnboarding(); }
+function setObMode(m){ obMode=m; obError=''; renderOnboarding(); }
+function saveProfile(){
+  const name = document.getElementById('obName').value.trim();
+  const email = document.getElementById('obEmail').value.trim();
+  if(!name){ obError='Add your name to continue.'; renderOnboarding(); return; }
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ obError='Enter a valid email to sign up.'; renderOnboarding(); return; }
+  obError='';
+  state.profile = { name, avatar: obAvatar, grade: document.getElementById('obGrade').value, email, phone: document.getElementById('obPhone').value.trim(), joined: iso(today) };
+  save();
+  render();
+}
+function loginWithCode(){
+  const raw = document.getElementById('obCode').value.trim();
+  if(!raw){ obError='Paste your account code first.'; renderOnboarding(); return; }
+  try{
+    const data = decodeAccountCode(raw);
+    if(!data.profile || !data.profile.name) throw new Error('bad payload');
+    state.profile = data.profile;
+    state.classSchedule = data.classSchedule || {Mon:[],Tue:[],Wed:[],Thu:[],Fri:[],Sat:[],Sun:[]};
+    state.events = data.events || [];
+    state.subjects = data.subjects || [];
+    state.flashcards = data.flashcards || [];
+    state.money = data.money || {monthlyIncome:0, transactions:[], goal:{name:'Goal',target:1,saved:0}};
+    state.goals = data.goals || [];
+    state.habits = data.habits || [];
+    state.classesConfirmed = ('classesConfirmed' in data) ? data.classesConfirmed : true;
+    state.moneySetupDone = ('moneySetupDone' in data) ? data.moneySetupDone : true;
+    obError='';
+    profAvatar = state.profile.avatar;
+    save();
+    active = 'dashboard';
+    render();
+  }catch(e){
+    obError = "That code didn't work — check you copied the whole thing.";
+    renderOnboarding();
+  }
+}
+
+function renderProfileChips(){
+  const p = state.profile;
+  if(!p) return;
+  const railEl = document.getElementById('railProfile');
+  if(railEl) railEl.innerHTML = `<div class="avatar-circle sm">${p.avatar}</div><div><div class="rp-name">${esc(p.name)}</div><div class="rp-sub">${esc(p.grade)} · View profile</div></div>`;
+  const fabEl = document.getElementById('mobileFab');
+  if(fabEl) fabEl.textContent = p.avatar;
+}
+
+function renderProfile(){
+  const p = state.profile;
+  if(profAvatar===null) profAvatar = p.avatar;
+  const itemCount = state.events.length + state.subjects.length + state.money.transactions.length + state.goals.length + state.habits.length;
+  document.getElementById('main').innerHTML = `
+    <div class="topbar"><div><h1>Profile</h1><p>This is what personalizes your dashboard and greetings.</p></div></div>
+    <div class="grid g2">
+      <div class="card">
+        <h3>Your info</h3>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+          <div class="avatar-circle lg">${profAvatar}</div>
+          <div style="font-size:12.5px;color:var(--ink-faint)">Member since ${fmtDate(p.joined)}<br>${itemCount} items tracked in LifeMap</div>
+        </div>
+        <div class="field"><label>Name</label><input id="pName" value="${esc(p.name)}"></div>
+        <div class="field"><label>Avatar</label>
+          <div class="avatar-grid">${AVATARS.map(a=>`<button type="button" class="avatar-opt ${a===profAvatar?'sel':''}" onclick="selectProfAvatar('${a}')">${a}</button>`).join('')}</div>
+        </div>
+        <div class="field"><label>Grade / year</label>
+          <select id="pGrade">${GRADES.map(g=>`<option ${g===p.grade?'selected':''}>${g}</option>`).join('')}</select>
+        </div>
+        <div class="row">
+          <div class="field"><label>Email <span style="font-weight:500;color:var(--ink-faint)">(optional)</span></label><input id="pEmail" type="email" value="${esc(p.email||'')}" placeholder="you@email.com"></div>
+          <div class="field"><label>Phone <span style="font-weight:500;color:var(--ink-faint)">(optional)</span></label><input id="pPhone" type="tel" value="${esc(p.phone||'')}" placeholder="+91 …"></div>
+        </div>
+        <button class="btn primary" onclick="saveProfileEdit()">Save changes</button>
+      </div>
+      <div class="card">
+        <h3>Account</h3>
+        <p style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin:0 0 14px">Your data — schedule, study plans, money, goals — is stored only in this browser, not on a server. Email and phone are just for your profile card here; they're not verified, and there's no password — this isn't login security, just a name tag. Signing out just clears your name and avatar; everything else stays.</p>
+        <button class="btn ghost" onclick="signOut()">Sign out</button>
+        <button class="btn ghost" style="margin-left:8px" onclick="goToMoneySetup()">Redo money setup</button>
+
+        <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:16px">
+          <h3 style="margin-bottom:6px">Move to another device</h3>
+          <p style="font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin:0 0 10px">Copy this code and paste it into "Log in" on another browser or device to bring your whole account with you — schedule, money, goals, all of it. Anyone with this code can see and edit your data, so treat it like a password and don't share it.</p>
+          <textarea id="acctCode" rows="4" readonly style="font-family:monospace;font-size:10.5px" onclick="this.select()">${encodeAccountCode()}</textarea>
+          <button class="btn ghost sm" style="margin-top:8px" onclick="copyAccountCode()">Copy code</button>
+        </div>
+
+        <div class="danger-zone">
+          <p><b>Reset everything.</b> Deletes your profile and all schedule, study, money, goal and habit data from this device. This can't be undone.</p>
+          <button class="btn danger sm" onclick="resetAll()">Reset all data</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function copyAccountCode(){
+  const el = document.getElementById('acctCode');
+  el.select();
+  try{ navigator.clipboard.writeText(el.value); }catch(e){ document.execCommand('copy'); }
+}
+function selectProfAvatar(a){ profAvatar=a; renderProfile(); }
+function saveProfileEdit(){
+  const name = document.getElementById('pName').value.trim();
+  if(!name) return;
+  state.profile = { ...state.profile, name, avatar: profAvatar, grade: document.getElementById('pGrade').value, email: document.getElementById('pEmail').value.trim(), phone: document.getElementById('pPhone').value.trim() };
+  save();
+  render();
+}
+function signOut(){
+  if(!confirm('Sign out? Your schedule, study plans, money and goals will stay on this device.')) return;
+  state.profile = null;
+  profAvatar = null;
+  save();
+  render();
+}
+function resetAll(){
+  if(!confirm('This deletes everything LifeMap has stored on this device. Continue?')) return;
+  state = seed();
+  state.profile = null;
+  profAvatar = null;
+  save();
+  active = 'dashboard';
+  render();
+}
+
+/* ---------------- NAV ---------------- */
+const VIEWS = [
+  {id:'dashboard', label:'Dashboard', icon:'home'},
+  {id:'scheduler', label:'Scheduler', icon:'cal'},
+  {id:'studymind', label:'StudyMind', icon:'brain'},
+  {id:'moneymap', label:'MoneyMap', icon:'wallet'},
+  {id:'goals', label:'Goals & Habits', icon:'target'},
+];
+let active = 'dashboard';
+
+function renderNav(){
+  document.getElementById('railNav').innerHTML = VIEWS.map(v=>`
+    <button class="rail-link ${v.id===active?'active':''}" onclick="setView('${v.id}')">${ICONS[v.icon]}${v.label}</button>
+  `).join('');
+  document.getElementById('tabNav').innerHTML = VIEWS.map(v=>`
+    <button class="tab-btn ${v.id===active?'active':''}" onclick="setView('${v.id}')">${ICONS[v.icon]}<span>${v.label.split(' ')[0]}</span></button>
+  `).join('');
+}
+function setView(v){ active=v; window.scrollTo(0,0); render(); }
+
+/* ---------------- MODAL HELPERS ---------------- */
+function openModal(html){
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('modalBg').classList.add('show');
+}
+function closeModal(){ document.getElementById('modalBg').classList.remove('show'); render(); }
+document.getElementById('modalBg').addEventListener('click', e=>{ if(e.target.id==='modalBg') closeModal(); });
+
+/* ================= DASHBOARD ================= */
+function renderDashboard(){
+  const todays = eventsForDate(today).sort((a,b)=>a.time.localeCompare(b.time));
+  const spent = state.money.transactions.filter(t=>t.amt<0).reduce((s,t)=>s+Math.abs(t.amt),0);
+  const income = state.money.transactions.filter(t=>t.amt>0).reduce((s,t)=>s+t.amt,0);
+  const balance = income - spent;
+  const goal = state.money.goal;
+  const goalPct = Math.min(100, Math.round(goal.saved/goal.target*100));
+
+  const upcomingTests = state.subjects.filter(s=>new Date(s.examDate)>=today).sort((a,b)=>new Date(a.examDate)-new Date(b.examDate)).slice(0,3);
+  const dueAssign = state.events.filter(e=>e.type==='assignment' && new Date(e.date)>=today).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,3);
+
+  const activeGoals = state.goals.slice(0,3);
+  const habits = state.habits.slice(0,3);
+
+  document.getElementById('main').innerHTML = `
+    <div class="topbar">
+      <div><h1>${greetingWord()}, ${esc(state.profile.name.split(' ')[0])} ${state.profile.avatar}</h1><p>${fmtDate(today)} — here's where your time, money and focus stand right now.</p></div>
+    </div>
+    <div class="grid g2">
+      <div class="card">
+        <h3>Today's schedule <span class="muted">${todays.length} item${todays.length!==1?'s':''}</span></h3>
+        ${todays.length? todays.map(e=>rowlineEvent(e)).join('') : emptyState('📭','Nothing on the books today — add something in Scheduler.')}
+      </div>
+      <div class="card">
+        <h3>Money this month</h3>
+        <div class="stat-row"><div><div class="stat-num">₹${balance}</div><div style="font-size:12.5px;color:var(--ink-faint)">available</div></div>
+        <div style="text-align:right;font-size:12.5px;color:var(--ink-faint)">spent ₹${spent} · saved toward<br><b style="color:var(--ink)">${goal.name}</b></div></div>
+        <div class="bar" style="margin-top:10px"><span style="width:${goalPct}%;background:var(--mint)"></span></div>
+        <div style="font-size:12px;color:var(--ink-faint);margin-top:6px">₹${goal.saved} of ₹${goal.target} (${goalPct}%)</div>
+      </div>
+    </div>
+
+    <div class="grid g2 section-gap">
+      <div class="card">
+        <h3>Study <span class="muted">upcoming</span></h3>
+        ${upcomingTests.length || dueAssign.length ? `
+          ${upcomingTests.map(s=>`<div class="rowline"><div class="dot" style="background:${mastColor(s.confidence)}"></div>
+            <div class="main"><div class="title">${esc(s.name)} — ${esc(s.topic)}</div><div class="sub">Exam ${fmtDate(s.examDate)}</div></div></div>`).join('')}
+          ${dueAssign.map(e=>`<div class="rowline"><div class="dot" style="background:var(--coral)"></div>
+            <div class="main"><div class="title">${esc(e.title)}</div><div class="sub">Due ${fmtDate(e.date)}</div></div></div>`).join('')}
+        ` : emptyState('📚','No tests or assignments logged yet.')}
+      </div>
+      <div class="card">
+        <h3>Goals & habits</h3>
+        ${activeGoals.map(g=>`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:5px"><span>${esc(g.title)}</span><span style="color:var(--ink-faint);font-weight:500">${g.progress}%</span></div><div class="bar"><span style="width:${g.progress}%;background:var(--amber)"></span></div></div>`).join('')}
+        ${habits.length?`<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">${habits.map(h=>`<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:6px"><span>${esc(h.title)}</span><span class="pill mint">${h.days.filter(Boolean).length}/7</span></div>`).join('')}</div>`:''}
+        ${!activeGoals.length && !habits.length ? emptyState('🎯','No goals yet — add one in Goals & Habits.') : ''}
+      </div>
+    </div>
+  `;
+}
+function mastColor(conf){ return conf>=4?'var(--mint)': conf>=2?'var(--amber)':'var(--coral)'; }
+function rowlineEvent(e){
+  const c = evColor(e.type);
+  return `<div class="rowline"><div class="dot" style="background:${c}"></div>
+    <div class="main"><div class="title">${esc(e.title)}</div><div class="sub">${typeLabel(e.type)}${e.note?' · '+esc(e.note):''}</div></div>
+    <div class="time">${e.time||''}</div></div>`;
+}
+function evColor(type){ return {class:'var(--indigo)',exam:'var(--coral)',assignment:'var(--coral)',activity:'var(--amber)',study:'var(--mint)',personal:'var(--ink-faint)'}[type]||'var(--ink-faint)'; }
+function typeLabel(t){ return {class:'Class',exam:'Exam',assignment:'Assignment',activity:'Activity',study:'Study session',personal:'Personal'}[t]||t; }
+function emptyState(emoji,text){ return `<div class="empty"><span class="big">${emoji}</span>${text}</div>`; }
+function esc(s){ return (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ================= SCHEDULER ================= */
+let scheduleView = 'day';
+let selectedDay = iso(today);
+const DAY_START_HOUR = 6, DAY_END_HOUR = 23, PX_PER_HOUR = 56;
+const TYPE_DURATION = {class:60, exam:90, assignment:30, study:45, activity:60, personal:45};
+
+function renderScheduler(){
+  const weekStart = addDays(today, -today.getDay()+1); // Monday
+  const days = [...Array(7)].map((_,i)=>addDays(weekStart,i));
+
+  document.getElementById('main').innerHTML = `
+    <div class="topbar"><div><h1>Smart Scheduler</h1><p>Tell it what's coming up — it'll build a realistic plan around it.</p></div></div>
+
+    <div class="smart-bar">
+      <h2>What's on your plate?</h2>
+      <p>Try: "Biology test Friday and Economics essay due Monday" — LifeMap will chunk it and spread the work out.</p>
+      <form class="smart-form" onsubmit="handleSmartInput(event)">
+        <input id="smartInput" type="text" placeholder="I have a Biology test on Friday..." autocomplete="off">
+        <button type="submit">Plan it</button>
+      </form>
+      <div class="why" id="whyBox"></div>
+    </div>
+
+    <div class="card">
+      <h3>${scheduleView==='day' ? fmtDate(selectedDay) : 'This week'}
+        <span class="muted" style="display:flex;gap:8px;align-items:center">
+          <span style="display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden">
+            <button class="btn ${scheduleView==='day'?'primary':'ghost'} sm" style="border-radius:0" onclick="setScheduleView('day')">Day</button>
+            <button class="btn ${scheduleView==='week'?'primary':'ghost'} sm" style="border-radius:0" onclick="setScheduleView('week')">Week</button>
+          </span>
+          <button class="btn ghost sm" onclick="openEditClasses()">Edit classes</button>
+          <button class="btn ghost sm" onclick="openAddEvent()">${ICONS.plus} Add</button>
+        </span>
+      </h3>
+      ${scheduleView==='day' ? dayTabsHtml(days) + timelineHtml(new Date(selectedDay)) : weekGridHtml(days)}
+    </div>
+
+    <div class="card section-gap">
+      <h3>All upcoming items</h3>
+      ${state.events.filter(e=>new Date(e.date)>=today).sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||'')).map(e=>`
+        <div class="rowline"><div class="dot" style="background:${evColor(e.type)}"></div>
+          <div class="main"><div class="title">${esc(e.title)}</div><div class="sub">${typeLabel(e.type)} · ${fmtDate(e.date)}${e.time?' · '+e.time:''}</div></div>
+          <button class="icon-btn" onclick="deleteEvent('${e.id}')">${ICONS.trash}</button>
+        </div>`).join('') || emptyState('🗓️','Nothing scheduled yet.')}
+    </div>
+  `;
+}
+function setScheduleView(v){ scheduleView=v; renderScheduler(); }
+function selectDay(d){ selectedDay=d; renderScheduler(); }
+function weekGridHtml(days){
+  return `<div class="week">
+    ${days.map(d=>{
+      const dEvents = eventsForDate(d).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+      const isToday = iso(d)===iso(today);
+      return `<div class="day ${isToday?'today':''}" onclick="selectDayFromWeek('${iso(d)}')">
+        <div class="dname">${DOW[d.getDay()]} <b>${d.getDate()}</b></div>
+        ${dEvents.map(e=>`<div class="ev" style="background:${softBg(e.type)};color:${evColor(e.type)}" title="${esc(e.title)}">
+          ${e.time?fmt12(e.time)+' · ':''}${esc(e.title)}
+        </div>`).join('') || ''}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+function selectDayFromWeek(dateStr){ selectedDay=dateStr; scheduleView='day'; renderScheduler(); }
+function dayTabsHtml(days){
+  return `<div class="day-tabs">${days.map(d=>{
+    const ds = iso(d);
+    return `<button class="day-tab ${ds===selectedDay?'active':''}" onclick="selectDay('${ds}')">${DOW[d.getDay()]} ${d.getDate()}</button>`;
+  }).join('')}</div>`;
+}
+function timeToMinutes(t){ if(!t) return null; const [h,m]=t.split(':').map(Number); return h*60+m; }
+function fmt12(t){ if(!t) return ''; const [h,m]=t.split(':').map(Number); const ap=h>=12?'PM':'AM'; const hh=((h+11)%12)+1; return `${hh}:${String(m).padStart(2,'0')} ${ap}`; }
+function fmt12Hour(h){ const ap=h>=12?'PM':'AM'; const hh=((h+11)%12)+1; return `${hh} ${ap}`; }
+function timelineHtml(dateObj){
+  const totalHeight = (DAY_END_HOUR-DAY_START_HOUR)*PX_PER_HOUR;
+  const hours = [];
+  for(let h=DAY_START_HOUR; h<=DAY_END_HOUR; h++) hours.push(h);
+  const all = eventsForDate(dateObj);
+  const timed = all.filter(e=>e.time);
+  const untimed = all.filter(e=>!e.time);
+  const blocks = timed.map(e=>{
+    const startMin = timeToMinutes(e.time);
+    const dur = TYPE_DURATION[e.type]||45;
+    const top = ((startMin - DAY_START_HOUR*60)/60)*PX_PER_HOUR;
+    const height = Math.max(24, (dur/60)*PX_PER_HOUR - 2);
+    if(startMin < DAY_START_HOUR*60 || startMin > DAY_END_HOUR*60) return '';
+    return `<div class="tl-event" style="top:${top}px;height:${height}px;background:${softBg(e.type)};border-left:3px solid ${evColor(e.type)};color:${evColor(e.type)}">
+      <div class="tl-title">${esc(e.title)}</div><div class="tl-time">${fmt12(e.time)}</div>
+    </div>`;
+  }).join('');
+  return `
+    <div class="timeline-wrap">
+      <div class="timeline" style="height:${totalHeight}px">
+        ${hours.map(h=>`<div class="tl-hour" style="top:${(h-DAY_START_HOUR)*PX_PER_HOUR}px"><span>${fmt12Hour(h)}</span></div>`).join('')}
+        ${blocks}
+      </div>
+    </div>
+    ${untimed.length? `<div class="tl-untimed"><div class="tl-untimed-label">No set time</div>${untimed.map(e=>`<div class="ev" style="background:${softBg(e.type)};color:${evColor(e.type)}">${esc(e.title)}</div>`).join('')}</div>` : ''}
+  `;
+}
+function softBg(type){ return {class:'var(--indigo-soft)',exam:'var(--coral-soft)',assignment:'var(--coral-soft)',activity:'var(--amber-soft)',study:'var(--mint-soft)',personal:'var(--line)'}[type]||'var(--line)'; }
+
+function deleteEvent(id){ state.events = state.events.filter(e=>e.id!==id); save(); render(); }
+
+function openAddEvent(){
+  openModal(`
+    <h3>Add to schedule</h3>
+    <div class="field"><label>Title</label><input id="mTitle" placeholder="e.g. Chemistry homework"></div>
+    <div class="row">
+      <div class="field"><label>Type</label>
+        <select id="mType"><option value="class">Class</option><option value="exam">Exam</option><option value="assignment">Assignment</option><option value="study">Study session</option><option value="activity">Activity/CCA</option><option value="personal">Personal</option></select>
+      </div>
+      <div class="field"><label>Date</label><input id="mDate" type="date" value="${iso(today)}"></div>
+    </div>
+    <div class="field"><label>Time (optional)</label><input id="mTime" type="time"></div>
+    <div class="modal-actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveManualEvent()">Add</button></div>
+  `);
+}
+function saveManualEvent(){
+  const title = document.getElementById('mTitle').value.trim();
+  if(!title) return;
+  const date = document.getElementById('mDate').value;
+  state.events.push({id:uid(), title, type:document.getElementById('mType').value, date, time:document.getElementById('mTime').value, note:''});
+  save();
+  render();
+  if(looksLikeSpend(title)) openSpendNudge(title, date);
+  else closeModal();
+}
+
+/* --- Spending nudge: catch calendar items that likely cost money --- */
+const SPEND_KEYWORDS = ['out','outing','hangout','hang out','movie','mall','shopping','dinner','lunch out','party','concert','cafe','coffee','restaurant','date night','trip','arcade','bowling','skating','amusement'];
+function looksLikeSpend(text){ const l=(text||'').toLowerCase(); return SPEND_KEYWORDS.some(k=>l.includes(k)); }
+function guessCategory(text){
+  const l=(text||'').toLowerCase();
+  if(/(movie|mall|arcade|bowling|concert|party|skating|amusement|game)/.test(l)) return 'Entertainment';
+  if(/(bus|uber|taxi|train|ride|cab|metro)/.test(l)) return 'Transport';
+  if(/(lunch|dinner|cafe|coffee|restaurant|food|snack)/.test(l)) return 'Food';
+  return 'Other';
+}
+function openSpendNudge(title, date){
+  openModal(`
+    <h3>Log spending for this?</h3>
+    <p style="font-size:13px;color:var(--ink-soft);margin:0 0 16px">"${esc(title)}" looks like it might cost something. Add it to MoneyMap now so your balance stays accurate.</p>
+    <div class="field"><label>Amount (₹)</label><input id="nAmt" type="number" min="0" step="0.01" placeholder="0.00"></div>
+    <div class="field"><label>Category</label><select id="nCat">
+      <option ${guessCategory(title)==='Food'?'selected':''}>Food</option>
+      <option ${guessCategory(title)==='Transport'?'selected':''}>Transport</option>
+      <option ${guessCategory(title)==='Entertainment'?'selected':''}>Entertainment</option>
+      <option ${guessCategory(title)==='Other'?'selected':''}>Other</option>
+    </select></div>
+    <div class="modal-actions"><button class="btn ghost" onclick="closeModal()">Not now</button><button class="btn primary" onclick="saveNudgeSpend('${title.replace(/'/g,"\\'").replace(/"/g,'&quot;')}','${date}')">Add to MoneyMap</button></div>
+  `);
+}
+function saveNudgeSpend(title, date){
+  const amt = +document.getElementById('nAmt').value;
+  if(!amt){ closeModal(); return; }
+  state.money.transactions.push({id:uid(), label:title, cat:document.getElementById('nCat').value, amt:-Math.abs(amt), date});
+  save();
+  closeModal();
+}
+
+/* --- Smart scheduling parser (lightweight heuristic NLP) --- */
+const DAY_NAMES = {sunday:0,monday:1,tuesday:2,wednesday:3,thursday:4,friday:5,saturday:6,sun:0,mon:1,tue:2,tues:2,wed:3,weds:3,thu:4,thur:4,thurs:4,fri:5,sat:6};
+function nextDateForDay(dayIdx){
+  let d = new Date(today);
+  let diff = (dayIdx - d.getDay() + 7) % 7;
+  if(diff===0) diff = 7; // assume upcoming, not today
+  return addDays(d, diff);
+}
+function handleSmartInput(evt){
+  evt.preventDefault();
+  const input = document.getElementById('smartInput');
+  const text = input.value.trim();
+  if(!text) return;
+  const clauses = text.split(/\band\b|,/i).map(s=>s.trim()).filter(Boolean);
+  let addedTests=[], addedTasks=[], spendCandidates=[];
+
+  clauses.forEach(clause=>{
+    const lower = clause.toLowerCase();
+    const dayMatch = Object.keys(DAY_NAMES).find(d=> new RegExp('\\b'+d+'\\b').test(lower));
+    const targetDate = dayMatch ? nextDateForDay(DAY_NAMES[dayMatch]) : addDays(today,5);
+    const isTest = /(test|exam|quiz)/.test(lower);
+    const isWriting = /(essay|report|ia|paper|assignment|project|homework)/.test(lower);
+
+    // pull subject-ish word: first capitalized-looking word or the phrase before test/essay
+    let subject = clause.replace(/\b(on|due|is|a|an|the|i have|test|exam|quiz|essay|report|assignment|homework|project|for)\b/gi,' ').replace(/\s+/g,' ').trim();
+    subject = subject.split(' ').slice(0,3).join(' ') || 'Task';
+
+    if(isTest){
+      addedTests.push(subject);
+      const plan = buildRevisionPlan(subject, iso(targetDate), 3);
+      plan.forEach(p=> state.events.push(p));
+      // also register in StudyMind
+      state.subjects.push({id:uid(), name:subject, topic:'General review', examDate:iso(targetDate), confidence:3});
+    } else if(isWriting) {
+      addedTasks.push(subject);
+      const chunks = chunkTask(subject, iso(targetDate));
+      chunks.forEach(c=> state.events.push(c));
+    } else {
+      state.events.push({id:uid(), title:clause, type:'personal', date:iso(targetDate), time:'', note:''});
+      if(looksLikeSpend(clause)) spendCandidates.push({title:clause, date:iso(targetDate)});
+    }
+  });
+
+  save();
+  input.value='';
+  const box = document.getElementById('whyBox');
+  let msg = '';
+  if(addedTests.length) msg += `<b>Spaced revision added.</b> For ${addedTests.join(', ')}, we spread short sessions across several days instead of one long cram — spacing practice like this improves recall versus a single re-read session. `;
+  if(addedTasks.length) msg += `<b>Task chunked.</b> ${addedTasks.join(', ')} was broken into smaller steps and spread toward the deadline so no single day carries the whole workload.`;
+  box.innerHTML = msg || 'Added to your schedule.';
+  box.classList.add('show');
+  renderScheduler();
+  if(spendCandidates.length) openSpendNudge(spendCandidates[0].title, spendCandidates[0].date);
+}
+function buildRevisionPlan(subject, examDateIso, priorDays){
+  // spaced + retrieval practice sessions leading up to exam
+  const exam = new Date(examDateIso);
+  const offsets = [ -Math.max(1,priorDays), -Math.ceil(priorDays/2), -1 ]; // days before exam
+  const labels = ['Active recall session','Mini quiz','Final review'];
+  return offsets.map((off,i)=>({
+    id:uid(), title:`${subject}: ${labels[i]}`, type:'study',
+    date: iso(addDays(exam, off)), time:'17:00', note:'Spaced practice'
+  })).filter(e=> new Date(e.date) >= today);
+}
+function chunkTask(subject, dueIso){
+  const due = new Date(dueIso);
+  const steps = ['Find sources / gather notes','Create outline','Write first draft','Revise & edit','Final check'];
+  const totalDays = Math.max(steps.length, Math.round((due-today)/86400000));
+  return steps.map((s,i)=>{
+    const off = Math.round((i+1) * (totalDays/steps.length)) - totalDays;
+    return {id:uid(), title:`${subject}: ${s}`, type:'assignment', date: iso(addDays(due, off)), time:'', note:'Chunked task'};
+  }).filter(e=> new Date(e.date) >= today);
+}
+
+/* ================= STUDYMIND ================= */
+let flashIndex = 0, flashFlipped=false, flashFilter=null;
+
+function daysUntil(d){ return Math.round((new Date(d)-today)/86400000); }
+function masteryLabel(conf){ return conf>=4?'strong':conf>=2?'review':'weak'; }
+
+function renderStudyMind(){
+  const subjects = [...state.subjects].sort((a,b)=>new Date(a.examDate)-new Date(b.examDate));
+  document.getElementById('main').innerHTML = `
+    <div class="topbar"><div><h1>StudyMind</h1><p>Revision plans built around your exam dates and how confident you feel.</p></div>
+      <button class="btn primary" onclick="openAddSubject()">${ICONS.plus} Add subject</button>
+    </div>
+
+    <div class="grid g2">
+      <div class="card">
+        <h3>Topic mastery</h3>
+        ${subjects.length? subjects.map(s=>`
+          <div class="topic">
+            <div class="mst ${masteryLabel(s.confidence)}"></div>
+            <div class="main">
+              <div class="title">${esc(s.name)} — ${esc(s.topic)}</div>
+              <div class="sub">Exam ${fmtDate(s.examDate)} · ${daysUntil(s.examDate)>=0? daysUntil(s.examDate)+' days away':'past'} · confidence ${s.confidence}/5</div>
+              <div class="plan-steps">${revisionStepsFor(s).map(st=>`<span class="step-chip">${st}</span>`).join('')}</div>
+            </div>
+            <button class="icon-btn" onclick="deleteSubject('${s.id}')">${ICONS.trash}</button>
+          </div>
+        `).join('') : emptyState('🧠','Add a subject to get a revision plan.')}
+      </div>
+
+      <div class="card">
+        <h3>Flashcards <span class="muted">${state.flashcards.length} cards</span></h3>
+        ${renderFlashArea()}
+        <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+          <button class="btn ghost sm" onclick="openAddFlash()">${ICONS.plus} Add flashcard</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card section-gap">
+      <h3>Why am I seeing this?</h3>
+      <p style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin:0">
+        When you add a subject, LifeMap spaces sessions out instead of stacking them the night before: a quick pass today, a short active-recall check tomorrow, a mini quiz a few days later, and a final recall session near the exam. Spacing and retrieval practice like this tend to build stronger long-term recall than rereading notes once. Topics you rate low-confidence get prioritized with more, earlier sessions.
+      </p>
+    </div>
+  `;
+}
+function revisionStepsFor(s){
+  const conf = s.confidence;
+  const base = ['Learn concept','+1d Recall','+3d Mini quiz'];
+  if(conf<3) base.push('+5d Recall');
+  base.push('+7d Review');
+  return base;
+}
+function deleteSubject(id){ state.subjects = state.subjects.filter(s=>s.id!==id); save(); render(); }
+function openAddSubject(){
+  openModal(`
+    <h3>Add a subject</h3>
+    <div class="field"><label>Subject</label><input id="sName" placeholder="e.g. Biology"></div>
+    <div class="field"><label>Topic</label><input id="sTopic" placeholder="e.g. Cell respiration"></div>
+    <div class="field"><label>Exam date</label><input id="sDate" type="date" value="${iso(addDays(today,7))}"></div>
+    <div class="field"><label>Confidence (1 = weak, 5 = strong)</label><input id="sConf" type="range" min="1" max="5" value="3"></div>
+    <div class="modal-actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveSubject()">Add</button></div>
+  `);
+}
+function saveSubject(){
+  const name=document.getElementById('sName').value.trim();
+  if(!name) return;
+  state.subjects.push({id:uid(), name, topic:document.getElementById('sTopic').value.trim()||'General', examDate:document.getElementById('sDate').value, confidence:+document.getElementById('sConf').value});
+  save(); closeModal(); render();
+}
+
+function renderFlashArea(){
+  const list = state.flashcards;
+  if(!list.length) return emptyState('🗂️','No flashcards yet.');
+  if(flashIndex>=list.length) flashIndex=0;
+  const c = list[flashIndex];
+  return `
+    <div class="flash" onclick="flipFlash()">
+      <span class="tag">${esc(c.subject)}</span>
+      ${flashFlipped? esc(c.back) : esc(c.front)}
+    </div>
+    <div class="flash-nav">
+      <button class="btn ghost sm" onclick="prevFlash()">← Prev</button>
+      <span style="font-size:12px;color:var(--ink-faint)">${flashIndex+1} / ${list.length} · tap card to flip</span>
+      <button class="btn ghost sm" onclick="nextFlash()">Next →</button>
+    </div>
+  `;
+}
+function flipFlash(){ flashFlipped=!flashFlipped; document.querySelector('.flash').outerHTML = renderFlashOnly(); }
+function renderFlashOnly(){
+  const c = state.flashcards[flashIndex];
+  return `<div class="flash" onclick="flipFlash()"><span class="tag">${esc(c.subject)}</span>${flashFlipped? esc(c.back): esc(c.front)}</div>`;
+}
+function nextFlash(){ flashIndex=(flashIndex+1)%state.flashcards.length; flashFlipped=false; renderStudyMind(); }
+function prevFlash(){ flashIndex=(flashIndex-1+state.flashcards.length)%state.flashcards.length; flashFlipped=false; renderStudyMind(); }
+function openAddFlash(){
+  openModal(`
+    <h3>Add flashcard</h3>
+    <div class="field"><label>Subject</label><input id="fSubj" placeholder="e.g. Biology"></div>
+    <div class="field"><label>Front (question)</label><textarea id="fFront" rows="2"></textarea></div>
+    <div class="field"><label>Back (answer)</label><textarea id="fBack" rows="2"></textarea></div>
+    <div class="modal-actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveFlash()">Add</button></div>
+  `);
+}
+function saveFlash(){
+  const front=document.getElementById('fFront').value.trim();
+  if(!front) return;
+  state.flashcards.push({id:uid(), subject:document.getElementById('fSubj').value.trim()||'General', front, back:document.getElementById('fBack').value.trim()});
+  save(); closeModal(); render();
+}
+
+/* ================= MONEYMAP ================= */
+function renderMoneyMap(){
+  const txns = [...state.money.transactions].sort((a,b)=>b.date.localeCompare(a.date));
+  const spentByCat = {};
+  txns.filter(t=>t.amt<0).forEach(t=> spentByCat[t.cat] = (spentByCat[t.cat]||0) + Math.abs(t.amt));
+  const totalSpent = Object.values(spentByCat).reduce((a,b)=>a+b,0) || 1;
+  const income = txns.filter(t=>t.amt>0).reduce((s,t)=>s+t.amt,0);
+  const balance = income - (totalSpent===1 && !Object.keys(spentByCat).length ? 0 : totalSpent);
+  const goal = state.money.goal;
+  const goalPct = Math.min(100, Math.round(goal.saved/goal.target*100));
+
+  document.getElementById('main').innerHTML = `
+    <div class="topbar"><div><h1>MoneyMap</h1><p>Where your money's coming from, where it's going, and what you're saving for.</p></div>
+      <button class="btn primary" onclick="openAddTxn()">${ICONS.plus} Add transaction</button>
+    </div>
+
+    <div class="grid g3">
+      <div class="card"><h3>Available</h3><div class="stat-num" style="color:var(--mint)">₹${balance}</div><div style="font-size:12px;color:var(--ink-faint);margin-top:4px">this month</div></div>
+      <div class="card"><h3>Spent</h3><div class="stat-num" style="color:var(--coral)">₹${totalSpent - (Object.keys(spentByCat).length?0:1)}</div><div style="font-size:12px;color:var(--ink-faint);margin-top:4px">across ${Object.keys(spentByCat).length} categories</div></div>
+      <div class="card"><h3>Saved</h3><div class="stat-num" style="color:var(--amber)">₹${goal.saved}</div><div style="font-size:12px;color:var(--ink-faint);margin-top:4px">toward ${esc(goal.name)}</div></div>
+    </div>
+
+    <div class="grid g2 section-gap">
+      <div class="card">
+        <h3>Spending by category</h3>
+        <div class="cat-bar">${Object.entries(spentByCat).map(([cat,amt])=>`<span style="width:${amt/totalSpent*100}%;background:${CAT_COLORS[cat]||'var(--ink-faint)'}"></span>`).join('') || `<span style="width:100%;background:var(--line)"></span>`}</div>
+        <div class="legend">${Object.entries(spentByCat).map(([cat,amt])=>`<span><i style="background:${CAT_COLORS[cat]||'var(--ink-faint)'}"></i>${cat} — ₹${amt}</span>`).join('') || '<span>No spending logged yet</span>'}</div>
+      </div>
+      <div class="card">
+        <h3>Savings goal</h3>
+        <div style="font-weight:700;font-size:15px;margin-bottom:8px">${esc(goal.name)}</div>
+        <div class="bar" style="height:12px"><span style="width:${goalPct}%;background:var(--mint)"></span></div>
+        <div style="font-size:12.5px;color:var(--ink-faint);margin-top:7px">₹${goal.saved} of ₹${goal.target} saved (${goalPct}%)</div>
+        <button class="btn ghost sm" style="margin-top:12px" onclick="openEditGoal()">Edit goal</button>
+      </div>
+    </div>
+
+    <div class="card section-gap">
+      <h3>Recent transactions</h3>
+      ${txns.length? txns.slice(0,12).map(t=>`
+        <div class="txn"><div><div>${esc(t.label)}</div><div class="cat">${esc(t.cat)} · ${fmtDate(t.date)}</div></div>
+        <div style="display:flex;align-items:center;gap:10px"><span class="${t.amt<0?'amt-neg':'amt-pos'}">${t.amt<0?'-':'+'}₹${Math.abs(t.amt)}</span>
+        <button class="icon-btn" onclick="deleteTxn('${t.id}')">${ICONS.trash}</button></div></div>
+      `).join('') : emptyState('💸','No transactions yet.')}
+    </div>
+  `;
+}
+function deleteTxn(id){ state.money.transactions = state.money.transactions.filter(t=>t.id!==id); save(); render(); }
+function openAddTxn(){
+  openModal(`
+    <h3>Add transaction</h3>
+    <div class="field"><label>What was it?</label><input id="tLabel" placeholder="e.g. Coffee with friends"></div>
+    <div class="row">
+      <div class="field"><label>Type</label><select id="tKind"><option value="expense">Spent</option><option value="income">Received</option></select></div>
+      <div class="field"><label>Amount</label><input id="tAmt" type="number" min="0" step="0.01" placeholder="0.00"></div>
+    </div>
+    <div class="field"><label>Category</label><select id="tCat"><option>Food</option><option>Transport</option><option>Entertainment</option><option>Other</option><option>Income</option></select></div>
+    <div class="modal-actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveTxn()">Add</button></div>
+  `);
+}
+function saveTxn(){
+  const label=document.getElementById('tLabel').value.trim();
+  const amt=+document.getElementById('tAmt').value;
+  if(!label || !amt) return;
+  const kind = document.getElementById('tKind').value;
+  state.money.transactions.push({id:uid(), label, cat:document.getElementById('tCat').value, amt: kind==='expense'? -Math.abs(amt): Math.abs(amt), date: iso(today)});
+  save(); closeModal(); render();
+}
+function openEditGoal(){
+  const g = state.money.goal;
+  openModal(`
+    <h3>Edit savings goal</h3>
+    <div class="field"><label>Goal name</label><input id="gName" value="${esc(g.name)}"></div>
+    <div class="row">
+      <div class="field"><label>Target (₹)</label><input id="gTarget" type="number" value="${g.target}"></div>
+      <div class="field"><label>Saved so far (₹)</label><input id="gSaved" type="number" value="${g.saved}"></div>
+    </div>
+    <div class="modal-actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveGoalEdit()">Save</button></div>
+  `);
+}
+function saveGoalEdit(){
+  state.money.goal = {name:document.getElementById('gName').value.trim()||'Goal', target:+document.getElementById('gTarget').value||1, saved:+document.getElementById('gSaved').value||0};
+  save(); closeModal(); render();
+}
+
+/* ================= GOALS & HABITS ================= */
+function renderGoals(){
+  document.getElementById('main').innerHTML = `
+    <div class="topbar"><div><h1>Goals & Habits</h1><p>What you're working toward, and the small things you're doing daily.</p></div></div>
+
+    <div class="card">
+      <h3>Goals <button class="btn ghost sm" onclick="openAddGoal()">${ICONS.plus} Add goal</button></h3>
+      <div class="grid g2">
+        ${state.goals.length ? state.goals.map(g=>`
+          <div class="card tight goal-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+              <div style="font-weight:700;font-size:14.5px">${esc(g.title)}</div>
+              <button class="icon-btn" onclick="deleteGoal('${g.id}')">${ICONS.trash}</button>
+            </div>
+            <div style="font-size:12px;color:var(--ink-faint);margin:2px 0 10px">Due ${fmtDate(g.deadline)}</div>
+            <div class="bar"><span style="width:${g.progress}%;background:var(--amber)"></span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+              <span style="font-size:12px;color:var(--ink-faint)">${g.progress}% complete</span>
+              <div style="display:flex;gap:4px">
+                <button class="btn ghost sm" onclick="bumpGoal('${g.id}',-10)">-10</button>
+                <button class="btn ghost sm" onclick="bumpGoal('${g.id}',10)">+10</button>
+              </div>
+            </div>
+          </div>
+        `).join('') : emptyState('🎯','No goals yet.')}
+      </div>
+    </div>
+
+    <div class="card section-gap">
+      <h3>Habits <button class="btn ghost sm" onclick="openAddHabit()">${ICONS.plus} Add habit</button></h3>
+      ${state.habits.length? state.habits.map(h=>`
+        <div style="padding:12px 0;border-bottom:1px solid var(--line)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-weight:600;font-size:14px">${esc(h.title)}</div>
+            <button class="icon-btn" onclick="deleteHabit('${h.id}')">${ICONS.trash}</button>
+          </div>
+          <div class="habit-grid">
+            ${h.days.map((d,i)=>`<div class="hcell ${d?'done':''}" onclick="toggleHabitDay('${h.id}',${i})" title="${DOW[(i+1)%7]}"></div>`).join('')}
+          </div>
+          <div class="streak">${h.days.filter(Boolean).length} of 7 days this week</div>
+        </div>
+      `).join('') : emptyState('🔁','No habits yet.')}
+    </div>
+  `;
+}
+function bumpGoal(id,delta){ const g=state.goals.find(g=>g.id===id); if(!g) return; g.progress=Math.max(0,Math.min(100,g.progress+delta)); save(); render(); }
+function deleteGoal(id){ state.goals=state.goals.filter(g=>g.id!==id); save(); render(); }
+function toggleHabitDay(id,idx){ const h=state.habits.find(h=>h.id===id); if(!h) return; h.days[idx]=h.days[idx]?0:1; save(); render(); }
+function deleteHabit(id){ state.habits=state.habits.filter(h=>h.id!==id); save(); render(); }
+function openAddGoal(){
+  openModal(`
+    <h3>Add goal</h3>
+    <div class="field"><label>Goal</label><input id="gTitle" placeholder="e.g. Finish college applications"></div>
+    <div class="field"><label>Deadline</label><input id="gDeadline" type="date" value="${iso(addDays(today,30))}"></div>
+    <div class="modal-actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveGoal()">Add</button></div>
+  `);
+}
+function saveGoal(){
+  const title=document.getElementById('gTitle').value.trim();
+  if(!title) return;
+  state.goals.push({id:uid(), title, progress:0, deadline:document.getElementById('gDeadline').value});
+  save(); closeModal(); render();
+}
+function openAddHabit(){
+  openModal(`
+    <h3>Add habit</h3>
+    <div class="field"><label>Habit</label><input id="hTitle" placeholder="e.g. Drink water before class"></div>
+    <div class="modal-actions"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveHabit()">Add</button></div>
+  `);
+}
+function saveHabit(){
+  const title=document.getElementById('hTitle').value.trim();
+  if(!title) return;
+  state.habits.push({id:uid(), title, days:[0,0,0,0,0,0,0]});
+  save(); closeModal(); render();
+}
+
+/* ================= AI ASSISTANT ================= */
+let sampleFn = null;
+let chatMessages = [];
+(async function initAI(){
+  try{
+    if(window.claude && window.claude.use){
+      sampleFn = await window.claude.use('sample');
+    }
+  }catch(e){ sampleFn = null; }
+  const fab = document.getElementById('chatFab');
+  if(fab) fab.style.display = sampleFn ? 'flex' : 'none';
+})();
+
+function buildSystemPrimer(){
+  const upcoming = state.events.filter(e=>new Date(e.date)>=today).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,10)
+    .map(e=>`${e.date} ${e.time||''} — ${e.title} (${e.type})`).join('; ');
+  const subs = state.subjects.map(s=>`${s.name} (exam ${s.examDate}, confidence ${s.confidence}/5)`).join('; ');
+  const goals = state.goals.map(g=>`${g.title} (${g.progress}% done, due ${g.deadline})`).join('; ');
+  return `You are LifeMap's built-in assistant, helping a teenager named ${state.profile.name} (${state.profile.grade}) organize their schedule, studying, money and goals. Today is ${iso(today)}. Keep replies short, friendly and practical — a sentence or two unless a real list is needed. When the user wants something added to their planner, actually call the matching tool instead of just describing what you'd do — use plan_test_revision (not add_event) whenever they mention an upcoming test/exam and want study time planned around it. If a date is relative ("Friday", "next week"), resolve it to an actual YYYY-MM-DD date yourself before calling a tool. Current upcoming schedule: ${upcoming||'nothing yet'}. Current study subjects: ${subs||'none yet'}. Current goals: ${goals||'none yet'}.`;
+}
+function fullMessages(){
+  return [
+    {role:'user', content: buildSystemPrimer()},
+    {role:'assistant', content:"Got it — I've got the picture. What's up?"},
+    ...chatMessages
+  ];
+}
+const CHAT_TOOLS = [
+  {
+    name:'add_event', description:'Add an item to the schedule: a class, exam, assignment, study session, activity/CCA, or personal plan.',
+    inputSchema:{type:'object', properties:{
+      title:{type:'string'}, type:{type:'string', enum:['class','exam','assignment','study','activity','personal']},
+      date:{type:'string', description:'YYYY-MM-DD'}, time:{type:'string', description:'HH:MM 24h, optional'}
+    }, required:['title','type','date']},
+    execute: async (input)=>{
+      state.events.push({id:uid(), title:input.title, type:input.type||'personal', date:input.date, time:input.time||'', note:''});
+      save(); render();
+      return `Added "${input.title}" on ${input.date}${input.time?' at '+input.time:''}.`;
+    }
+  },
+  {
+    name:'add_subject', description:'Add a subject/topic to StudyMind with an exam date and a confidence level from 1 (weak) to 5 (strong).',
+    inputSchema:{type:'object', properties:{ name:{type:'string'}, topic:{type:'string'}, examDate:{type:'string', description:'YYYY-MM-DD'}, confidence:{type:'number'} }, required:['name','examDate']},
+    execute: async (input)=>{
+      state.subjects.push({id:uid(), name:input.name, topic:input.topic||'General', examDate:input.examDate, confidence:input.confidence||3});
+      save(); render();
+      return `Added ${input.name} to StudyMind with an exam on ${input.examDate}.`;
+    }
+  },
+  {
+    name:'add_transaction', description:'Log money spent or received in MoneyMap.',
+    inputSchema:{type:'object', properties:{ label:{type:'string'}, amount:{type:'number'}, category:{type:'string', enum:['Food','Transport','Entertainment','Other','Income']}, date:{type:'string', description:'YYYY-MM-DD, defaults to today'} }, required:['label','amount']},
+    execute: async (input)=>{
+      const amt = input.category==='Income' ? Math.abs(input.amount) : -Math.abs(input.amount);
+      state.money.transactions.push({id:uid(), label:input.label, cat:input.category||'Other', amt, date: input.date||iso(today)});
+      save(); render();
+      return `Logged "${input.label}": ${amt<0?'-':'+'}₹${Math.abs(amt)}.`;
+    }
+  },
+  {
+    name:'add_goal', description:'Add a goal with a deadline.',
+    inputSchema:{type:'object', properties:{ title:{type:'string'}, deadline:{type:'string', description:'YYYY-MM-DD'} }, required:['title','deadline']},
+    execute: async (input)=>{
+      state.goals.push({id:uid(), title:input.title, progress:0, deadline:input.deadline});
+      save(); render();
+      return `Added goal "${input.title}", due ${input.deadline}.`;
+    }
+  },
+  {
+    name:'plan_test_revision', description:'When the user mentions an upcoming test or exam and wants revision/study time planned for it, use this instead of add_event — it registers the subject in StudyMind AND adds a spaced set of revision sessions (active recall, mini quiz, final review) building up to the exam date, all in one call.',
+    inputSchema:{type:'object', properties:{ subject:{type:'string'}, examDate:{type:'string', description:'YYYY-MM-DD'}, confidence:{type:'number', description:'1 (weak) to 5 (strong), default 3'} }, required:['subject','examDate']},
+    execute: async (input)=>{
+      const plan = buildRevisionPlan(input.subject, input.examDate, 3);
+      plan.forEach(p=> state.events.push(p));
+      state.subjects.push({id:uid(), name:input.subject, topic:'General review', examDate:input.examDate, confidence:input.confidence||3});
+      save(); render();
+      return `Planned ${plan.length} spaced revision sessions for ${input.subject} before ${input.examDate}, and added it to StudyMind.`;
+    }
+  },
+  {
+    name:'add_habit', description:'Add a daily habit to track.',
+    inputSchema:{type:'object', properties:{ title:{type:'string'} }, required:['title']},
+    execute: async (input)=>{
+      state.habits.push({id:uid(), title:input.title, days:[0,0,0,0,0,0,0]});
+      save(); render();
+      return `Added habit "${input.title}".`;
+    }
+  }
+];
+function toggleChat(){
+  const panel = document.getElementById('chatPanel');
+  const showing = panel.style.display === 'flex';
+  panel.style.display = showing ? 'none' : 'flex';
+  if(!showing){
+    if(chatMessages.length===0){
+      chatMessages.push({role:'assistant', content:`Hey${state.profile? ' '+state.profile.name.split(' ')[0]:''}! Tell me what's going on and I can add it straight to your schedule, StudyMind, MoneyMap, or goals.`});
+    }
+    renderChat();
+    setTimeout(()=>{ const i=document.getElementById('chatInput'); if(i) i.focus(); }, 50);
+  }
+}
+function renderChat(){
+  const body = document.getElementById('chatBody');
+  if(!body) return;
+  body.innerHTML = chatMessages.map(m=>`<div class="chat-bubble ${m.role}">${esc(m.content)}</div>`).join('');
+  body.scrollTop = body.scrollHeight;
+}
+async function sendChat(evt){
+  evt.preventDefault();
+  const inp = document.getElementById('chatInput');
+  const text = inp.value.trim();
+  if(!text) return;
+  if(!sampleFn){
+    chatMessages.push({role:'user', content:text});
+    chatMessages.push({role:'assistant', content:"The assistant isn't available in this view right now — try reopening LifeMap from a fresh link."});
+    inp.value='';
+    renderChat();
+    return;
+  }
+  chatMessages.push({role:'user', content:text});
+  inp.value='';
+  const toSend = fullMessages();
+  chatMessages.push({role:'assistant', content:'…'});
+  const idx = chatMessages.length-1;
+  renderChat();
+  try{
+    const res = await sampleFn(toSend, {
+      tools: CHAT_TOOLS,
+      modelTier:'default',
+      cache:false,
+      onText: ({text})=>{ chatMessages[idx] = {role:'assistant', content:text}; renderChat(); }
+    });
+    chatMessages[idx] = {role:'assistant', content: (res && res.text) || "Done!"};
+  }catch(err){
+    chatMessages[idx] = {role:'assistant', content: chatErrorCopy(err)};
+  }
+  renderChat();
+}
+function chatErrorCopy(err){
+  const code = err && err.code;
+  const partial = err && err.text;
+  if(partial) return partial + "\n\n(cut off — " + (code||'an error') + ")";
+  switch(code){
+    case 'not_granted': return "I need your OK to use Claude here — reopen LifeMap and approve the prompt when it asks, then try again.";
+    case 'rate_limited': return "That's a lot of requests at once — give it a moment and try again.";
+    case 'session_expired': return "Looks like you got signed out — refresh the page and sign back in to claude.ai, then try again.";
+    case 'sampling_disabled': case 'not_declared': case 'capability_disabled': case 'capability_removed':
+      return "The assistant isn't switched on for this view — try reopening LifeMap from a fresh link.";
+    case 'tools_unavailable': return "This view can't run my planning tools — try reopening LifeMap from a fresh link.";
+    case 'refused': return "I can't help with that one — try rephrasing.";
+    case 'empty_completion': return "I didn't get a reply back — try asking in a slightly different way.";
+    case 'prompt_too_large': return "That's a lot to process at once — try a shorter message.";
+    default: return "Sorry, something went wrong reaching the assistant — try again in a bit.";
+  }
+}
+
+/* ================= ROUTER ================= */
+function render(){
+  const appEl = document.querySelector('.app');
+  const tabsEl = document.getElementById('tabNav');
+  const fabEl = document.getElementById('mobileFab');
+  const obEl = document.getElementById('onboarding');
+
+  if(!state.profile || !state.classesConfirmed || !state.moneySetupDone){
+    tabsEl.style.display = 'none';
+    fabEl.style.display = 'none';
+    obEl.style.display = 'flex';
+    renderOnboarding();
+    return;
+  }
+  appEl.style.display = '';
+  tabsEl.style.removeProperty('display');
+  fabEl.style.removeProperty('display');
+  obEl.style.display = 'none';
+
+  renderNav();
+  renderProfileChips();
+  if(active==='dashboard') renderDashboard();
+  else if(active==='scheduler') renderScheduler();
+  else if(active==='studymind') renderStudyMind();
+  else if(active==='moneymap') renderMoneyMap();
+  else if(active==='goals') renderGoals();
+  else if(active==='profile') renderProfile();
+}
+render();
+</script>
+</body>
+</html>
