@@ -158,6 +158,19 @@ button{font-family:inherit;}
 }
 .avatar-opt.sel{border-color:var(--indigo);background:var(--indigo-soft);}
 .onboard-card.wide{max-width:640px;}
+.tour-card{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom,0px));width:440px;max-width:calc(100vw - 24px);background:var(--ink);color:var(--paper);border-radius:var(--radius-l);padding:20px 22px;z-index:60;box-shadow:0 12px 40px -8px rgba(0,0,0,.45);}
+.tour-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;margin:0 0 6px;}
+.tour-card p{margin:0 0 14px;font-size:13.5px;line-height:1.55;opacity:.85;}
+.tour-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.tour-dots{display:flex;gap:5px;}
+.tour-dots i{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.25;display:block;}
+.tour-dots i.on{opacity:1;background:var(--coral);}
+.tour-actions{display:flex;gap:6px;align-items:center;}
+.tour-btn{border:none;border-radius:8px;padding:8px 14px;font-weight:600;font-size:13px;cursor:pointer;background:rgba(127,127,127,.28);color:inherit;}
+.tour-btn.go{background:var(--coral);color:#fff;}
+.tour-skip{background:none;border:none;color:inherit;opacity:.65;font-size:12.5px;cursor:pointer;text-decoration:underline;padding:0 8px;}
+@media(max-width:820px){.tour-card{bottom:calc(84px + env(safe-area-inset-bottom,0px));}}
+
 @media(min-width:700px){
   .onboard-card.wide .avatar-grid{grid-template-columns:repeat(12,1fr);}
   .onboard-card.wide .avatar-opt{font-size:16px;border-radius:10px;}
@@ -395,6 +408,8 @@ label{font-size:12.5px;font-weight:600;color:var(--ink-soft);display:block;margi
   </form>
 </div>
 
+<div class="tour-card" id="tourCard"></div>
+
 <div class="onboard-wrap" id="onboarding"></div>
 
 <div class="modal-bg" id="modalBg"><div class="modal" id="modalBody"></div></div>
@@ -432,41 +447,15 @@ function fmtDate(d){ return new Date(d).toLocaleDateString(undefined,{weekday:'s
 function uid(){ return Math.random().toString(36).slice(2,9); }
 
 function seed(){
-  const t=today;
   return {
     classSchedule:{Mon:[],Tue:[],Wed:[],Thu:[],Fri:[],Sat:[],Sun:[]},
-    events:[
-      {id:uid(), title:'Biology', type:'class', date:iso(t), time:'08:30', note:''},
-      {id:uid(), title:'Economics essay work block', type:'study', date:iso(t), time:'16:00', note:''},
-      {id:uid(), title:'Swim practice', type:'activity', date:iso(addDays(t,1)), time:'17:00', note:''},
-      {id:uid(), title:'History homework due', type:'assignment', date:iso(addDays(t,2)), time:'23:59', note:''},
-    ],
-    subjects:[
-      {id:uid(), name:'Biology', topic:'Cell respiration', examDate:iso(addDays(t,6)), confidence:2},
-      {id:uid(), name:'Economics', topic:'Opportunity cost', examDate:iso(addDays(t,10)), confidence:4},
-    ],
-    flashcards:[
-      {id:uid(), subject:'Biology', front:'What is the main product of cell respiration?', back:'ATP (energy) — plus CO₂ and water as byproducts.'},
-      {id:uid(), subject:'Economics', front:'Define opportunity cost.', back:'The value of the next-best alternative you give up when you make a choice.'},
-    ],
-    money:{
-      monthlyIncome:120,
-      transactions:[
-        {id:uid(), label:'Bus pass', cat:'Transport', amt:-15, date:iso(addDays(t,-2))},
-        {id:uid(), label:'Lunch out', cat:'Food', amt:-8, date:iso(addDays(t,-1))},
-        {id:uid(), label:'Movie tickets', cat:'Entertainment', amt:-14, date:iso(addDays(t,-1))},
-        {id:uid(), label:'Allowance', cat:'Income', amt:60, date:iso(t)},
-      ],
-      goal:{name:'New headphones', target:80, saved:32}
-    },
-    goals:[
-      {id:uid(), title:'Save for headphones', progress:40, deadline:iso(addDays(t,25))},
-      {id:uid(), title:'Finish Econ IA', progress:20, deadline:iso(addDays(t,14))},
-    ],
-    habits:[
-      {id:uid(), title:'Read 20 min', days:[1,1,0,1,0,0,0]},
-      {id:uid(), title:'No phone before bed', days:[1,1,1,0,1,0,0]},
-    ]
+    events:[],
+    subjects:[],
+    flashcards:[],
+    money:{ monthlyIncome:0, transactions:[], goal:{name:'Savings goal', target:0, saved:0} },
+    goals:[],
+    habits:[],
+    sampleRemoved:true
   };
 }
 
@@ -479,6 +468,23 @@ if(!('profile' in state)) state.profile = null;
 if(!state.classSchedule) state.classSchedule = {Mon:[],Tue:[],Wed:[],Thu:[],Fri:[],Sat:[],Sun:[]};
 if(!('classesConfirmed' in state)) state.classesConfirmed = !!state.setupComplete;
 if(!('moneySetupDone' in state)) state.moneySetupDone = false;
+if(!('tourDone' in state)) state.tourDone = false;
+if(!state.sampleRemoved){
+  const sampleEvents = ['Biology|class','Economics essay work block|study','Swim practice|activity','History homework due|assignment'];
+  state.events = (state.events||[]).filter(e=>!sampleEvents.includes(e.title+'|'+e.type));
+  state.subjects = (state.subjects||[]).filter(s=>!((s.name==='Biology'&&s.topic==='Cell respiration')||(s.name==='Economics'&&s.topic==='Opportunity cost')));
+  state.flashcards = (state.flashcards||[]).filter(f=>!['What is the main product of cell respiration?','Define opportunity cost.'].includes(f.front));
+  state.goals = (state.goals||[]).filter(g=>!['Save for headphones','Finish Econ IA'].includes(g.title));
+  state.habits = (state.habits||[]).filter(h=>!['Read 20 min','No phone before bed'].includes(h.title));
+  if(state.money){
+    state.money.transactions = (state.money.transactions||[]).filter(t=>!['Bus pass|Transport','Lunch out|Food','Movie tickets|Entertainment','Allowance|Income'].includes(t.label+'|'+t.cat));
+    const g = state.money.goal;
+    if(g && g.name==='New headphones' && g.target===80 && g.saved===32) state.money.goal = {name:'Savings goal', target:0, saved:0};
+    if(state.money.monthlyIncome===120 && !state.moneySetupDone) state.money.monthlyIncome = 0;
+  }
+  state.sampleRemoved = true;
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+}
 
 function save(){
   try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
@@ -639,6 +645,7 @@ function skipMoneySetup(){
   save();
   active = 'moneymap';
   render();
+  maybeStartTour();
 }
 function finishMoneySetup(){
   const income = +document.getElementById('msIncome').value || 0;
@@ -650,13 +657,14 @@ function finishMoneySetup(){
   state.money = {
     monthlyIncome: income,
     transactions,
-    goal: { name: goalName || 'Savings goal', target: Math.max(1, goalTarget||1), saved: goalSaved }
+    goal: { name: goalName || 'Savings goal', target: Math.max(0, goalTarget), saved: goalSaved }
   };
   state.moneySetupDone = true;
   obError = '';
   save();
   active = 'moneymap';
   render();
+  maybeStartTour();
 }
 function goToMoneySetup(){
   state.moneySetupDone = false;
@@ -686,11 +694,12 @@ function loginWithCode(){
     state.events = data.events || [];
     state.subjects = data.subjects || [];
     state.flashcards = data.flashcards || [];
-    state.money = data.money || {monthlyIncome:0, transactions:[], goal:{name:'Goal',target:1,saved:0}};
+    state.money = data.money || {monthlyIncome:0, transactions:[], goal:{name:'Savings goal',target:0,saved:0}};
     state.goals = data.goals || [];
     state.habits = data.habits || [];
     state.classesConfirmed = ('classesConfirmed' in data) ? data.classesConfirmed : true;
     state.moneySetupDone = ('moneySetupDone' in data) ? data.moneySetupDone : true;
+    state.tourDone = true;
     obError='';
     profAvatar = state.profile.avatar;
     save();
@@ -742,6 +751,7 @@ function renderProfile(){
         <p style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin:0 0 14px">Your data — schedule, study plans, money, goals — is stored only in this browser, not on a server. Email and phone are just for your profile card here; they're not verified, and there's no password — this isn't login security, just a name tag. Signing out just clears your name and avatar; everything else stays.</p>
         <button class="btn ghost" onclick="signOut()">Sign out</button>
         <button class="btn ghost" style="margin-left:8px" onclick="goToMoneySetup()">Redo money setup</button>
+        <button class="btn ghost" style="margin:8px 0 0 8px" onclick="startTour()">Take the tour</button>
 
         <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:16px">
           <h3 style="margin-bottom:6px">Move to another device</h3>
@@ -823,7 +833,7 @@ function renderDashboard(){
   const income = state.money.transactions.filter(t=>t.amt>0).reduce((s,t)=>s+t.amt,0);
   const balance = income - spent;
   const goal = state.money.goal;
-  const goalPct = Math.min(100, Math.round(goal.saved/goal.target*100));
+  const goalPct = goal.target>0 ? Math.min(100, Math.round(goal.saved/goal.target*100)) : 0;
 
   const upcomingTests = state.subjects.filter(s=>new Date(s.examDate)>=today).sort((a,b)=>new Date(a.examDate)-new Date(b.examDate)).slice(0,3);
   const dueAssign = state.events.filter(e=>e.type==='assignment' && new Date(e.date)>=today).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,3);
@@ -845,7 +855,7 @@ function renderDashboard(){
         <div class="stat-row"><div><div class="stat-num">₹${balance}</div><div style="font-size:12.5px;color:var(--ink-faint)">available</div></div>
         <div style="text-align:right;font-size:12.5px;color:var(--ink-faint)">spent ₹${spent} · saved toward<br><b style="color:var(--ink)">${goal.name}</b></div></div>
         <div class="bar" style="margin-top:10px"><span style="width:${goalPct}%;background:var(--mint)"></span></div>
-        <div style="font-size:12px;color:var(--ink-faint);margin-top:6px">₹${goal.saved} of ₹${goal.target} (${goalPct}%)</div>
+        <div style="font-size:12px;color:var(--ink-faint);margin-top:6px">${goal.target>0 ? `₹${goal.saved} of ₹${goal.target} (${goalPct}%)` : 'No savings goal yet — set one in MoneyMap'}</div>
       </div>
     </div>
 
@@ -1235,7 +1245,7 @@ function renderMoneyMap(){
   const income = txns.filter(t=>t.amt>0).reduce((s,t)=>s+t.amt,0);
   const balance = income - (totalSpent===1 && !Object.keys(spentByCat).length ? 0 : totalSpent);
   const goal = state.money.goal;
-  const goalPct = Math.min(100, Math.round(goal.saved/goal.target*100));
+  const goalPct = goal.target>0 ? Math.min(100, Math.round(goal.saved/goal.target*100)) : 0;
 
   document.getElementById('main').innerHTML = `
     <div class="topbar"><div><h1>MoneyMap</h1><p>Where your money's coming from, where it's going, and what you're saving for.</p></div>
@@ -1258,7 +1268,7 @@ function renderMoneyMap(){
         <h3>Savings goal</h3>
         <div style="font-weight:700;font-size:15px;margin-bottom:8px">${esc(goal.name)}</div>
         <div class="bar" style="height:12px"><span style="width:${goalPct}%;background:var(--mint)"></span></div>
-        <div style="font-size:12.5px;color:var(--ink-faint);margin-top:7px">₹${goal.saved} of ₹${goal.target} saved (${goalPct}%)</div>
+        <div style="font-size:12.5px;color:var(--ink-faint);margin-top:7px">${goal.target>0 ? `₹${goal.saved} of ₹${goal.target} saved (${goalPct}%)` : 'No goal set yet — tap Edit goal to add one'}</div>
         <button class="btn ghost sm" style="margin-top:12px" onclick="openEditGoal()">Edit goal</button>
       </div>
     </div>
@@ -1544,6 +1554,61 @@ function chatErrorCopy(err){
   }
 }
 
+/* ================= GUIDED TOUR ================= */
+let tourIdx = -1, tourSteps = [];
+function buildTourSteps(){
+  const first = state.profile ? state.profile.name.split(' ')[0] : '';
+  const s = [
+    {view:'dashboard', emoji:'👋', title:'Welcome'+(first?', '+first:'')+'!', body:'LifeMap helps you plan your time, your money and your focus in one place. This quick tour shows you around — you can skip it any time.'},
+    {view:'dashboard', emoji:'🏠', title:'Your dashboard', body:'This is home base: today’s schedule, your money this month, upcoming tests, goals and habits. It starts empty and fills up as you add things.'},
+    {view:'scheduler', emoji:'🗓️', title:'Smart Scheduler', body:'Type something like “Biology test Friday and Economics essay due Monday” into the dark bar. LifeMap spreads revision over several days and breaks big tasks into steps. Use Day and Week views, Edit classes for your timetable, and if something sounds like an outing it’ll ask you to log the spending.'},
+    {view:'studymind', emoji:'🧠', title:'StudyMind', body:'Add a subject, topic, exam date and how confident you feel. You get a spaced revision plan (learn, recall, quiz, review), and weak topics get extra attention. Flashcards live here too — tap a card to flip it.'},
+    {view:'moneymap', emoji:'💸', title:'MoneyMap', body:'Log what you spend and receive, sorted into Food, Transport, Entertainment and Other. Track a savings goal with a progress bar. You can change your starting numbers any time with “Redo money setup” in Profile.'},
+    {view:'goals', emoji:'🎯', title:'Goals & Habits', body:'Add goals with deadlines and nudge your progress up as you go. Habits get a 7-day grid — tap a day to tick it off and build a streak.'}
+  ];
+  if(window.claude && window.claude.use){
+    s.push({view:null, emoji:'💬', title:'AI assistant', body:'The chat button at the bottom right can plan for you. Try “I have a bio test on Friday, plan my revision” and it adds study sessions to your schedule.'});
+  }
+  s.push({view:'profile', emoji:'👤', title:'Your profile', body:'Edit your name, avatar, email and phone here, and copy your account code to move to another device. You can replay this tour any time from this page.'});
+  return s;
+}
+function startTour(){
+  tourSteps = buildTourSteps();
+  tourIdx = 0;
+  showTourStep();
+}
+function maybeStartTour(){
+  if(state.profile && state.classesConfirmed && state.moneySetupDone && !state.tourDone) startTour();
+}
+function showTourStep(){
+  const st = tourSteps[tourIdx];
+  if(st.view){ active = st.view; render(); window.scrollTo(0,0); }
+  const last = tourIdx === tourSteps.length-1;
+  const el = document.getElementById('tourCard');
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div style="font-size:11px;font-weight:700;opacity:.6;margin-bottom:6px;letter-spacing:.04em">STEP ${tourIdx+1} OF ${tourSteps.length}</div>
+    <div class="tour-title">${st.emoji} ${esc(st.title)}</div>
+    <p>${esc(st.body)}</p>
+    <div class="tour-foot">
+      <div class="tour-dots">${tourSteps.map((_,i)=>`<i class="${i===tourIdx?'on':''}"></i>`).join('')}</div>
+      <div class="tour-actions">
+        ${tourIdx>0 ? '<button class="tour-btn" onclick="tourBack()">Back</button>' : '<button class="tour-skip" onclick="endTour()">Skip tour</button>'}
+        <button class="tour-btn go" onclick="tourNext()">${last ? 'Done' : (tourIdx===0 ? 'Start' : 'Next')}</button>
+      </div>
+    </div>`;
+}
+function tourNext(){ if(tourIdx >= tourSteps.length-1){ endTour(); return; } tourIdx++; showTourStep(); }
+function tourBack(){ if(tourIdx>0){ tourIdx--; showTourStep(); } }
+function endTour(){
+  state.tourDone = true;
+  save();
+  tourIdx = -1;
+  document.getElementById('tourCard').style.display = 'none';
+  active = 'dashboard';
+  render();
+}
+
 /* ================= ROUTER ================= */
 function render(){
   const appEl = document.querySelector('.app');
@@ -1574,6 +1639,7 @@ function render(){
   else if(active==='profile') renderProfile();
 }
 render();
+maybeStartTour();
 </script>
 </body>
 </html>
