@@ -157,6 +157,12 @@ button{font-family:inherit;}
   font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
 }
 .avatar-opt.sel{border-color:var(--indigo);background:var(--indigo-soft);}
+.onboard-card.wide{max-width:640px;}
+@media(min-width:700px){
+  .onboard-card.wide .avatar-grid{grid-template-columns:repeat(12,1fr);}
+  .onboard-card.wide .avatar-opt{font-size:16px;border-radius:10px;}
+  .onboard-card{padding:26px 30px;}
+}
 
 .onboard-wrap{
   display:none;min-height:100vh;align-items:center;justify-content:center;padding:24px;
@@ -507,7 +513,7 @@ function decodeAccountCode(code){
 function renderOnboarding(){
   if(!state.profile){
     document.getElementById('onboarding').innerHTML = `
-      <div class="onboard-card">
+      <div class="onboard-card wide">
         <div class="onboard-brand"><div class="mark"></div><span class="word">LifeMap</span></div>
         <div style="display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:20px">
           <button type="button" class="btn ${obMode==='signup'?'primary':'ghost'} sm" style="flex:1;border-radius:0;justify-content:center" onclick="setObMode('signup')">Sign up</button>
@@ -515,13 +521,15 @@ function renderOnboarding(){
         </div>
         ${obMode==='signup' ? `
           <h2 style="margin:0 0 4px;font-size:20px">Create your LifeMap account</h2>
-          <p style="margin:0 0 18px;font-size:13.5px;color:var(--ink-soft)">A couple quick things so your dashboard actually looks like yours. This all stays on your device — see Account in Profile for what that means.</p>
-          <div class="field"><label>What should we call you?</label><input id="obName" placeholder="Your name"></div>
+          <p style="margin:0 0 14px;font-size:13.5px;color:var(--ink-soft)">A couple quick things so your dashboard actually looks like yours. This all stays on your device.</p>
+          <div class="row">
+            <div class="field"><label>What should we call you?</label><input id="obName" placeholder="Your name"></div>
+            <div class="field"><label>Grade / year</label>
+              <select id="obGrade">${GRADES.map(g=>`<option>${g}</option>`).join('')}</select>
+            </div>
+          </div>
           <div class="field"><label>Pick an avatar</label>
             <div class="avatar-grid">${AVATARS.map(a=>`<button type="button" class="avatar-opt ${a===obAvatar?'sel':''}" onclick="selectObAvatar('${a}')">${a}</button>`).join('')}</div>
-          </div>
-          <div class="field"><label>Grade / year</label>
-            <select id="obGrade">${GRADES.map(g=>`<option>${g}</option>`).join('')}</select>
           </div>
           <div class="row">
             <div class="field"><label>Email</label><input id="obEmail" type="email" placeholder="you@email.com"></div>
@@ -1544,6 +1552,7 @@ function render(){
   const obEl = document.getElementById('onboarding');
 
   if(!state.profile || !state.classesConfirmed || !state.moneySetupDone){
+    appEl.style.display = 'none';
     tabsEl.style.display = 'none';
     fabEl.style.display = 'none';
     obEl.style.display = 'flex';
